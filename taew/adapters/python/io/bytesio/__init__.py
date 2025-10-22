@@ -1,0 +1,1 @@
+"""bytesio adapter."""
