@@ -29,6 +29,9 @@ include = [
     "taew",
 ]
 
+[tool.setuptools.package-data]
+taew = ["py.typed"]
+
 [tool.mypy]
 explicit_package_bases = true
 strict = true
