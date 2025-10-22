@@ -14,8 +14,8 @@ Close the current issue by executing the complete workflow:
 
 Expected user input formats:
 - `/issue-close` - Skip build, auto-generate commit message
-- `/issue-close build` - Run ./scripts/build-all.sh before committing
-- `/issue-close --build` - Run ./scripts/build-all.sh before committing
+- `/issue-close build` - Run `make` (static checks + tests) before committing
+- `/issue-close --build` - Run `make` (static checks + tests) before committing
 - `/issue-close "Custom commit message"` - Skip build, use custom message
 - `/issue-close build "Custom commit message"` - Run build with custom message
 
