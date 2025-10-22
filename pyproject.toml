@@ -1,0 +1,43 @@
+[project]
+name = "taew"
+version = "2.1.0"
+description = "Python foundation library that supports rapid development of evolvable MVPs without premature technology lock-in."
+authors = [{ name = "Asher Sterkin", email = "asher.sterkin@gmail.com" }]
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.13"
+dependencies = [
+    "docstring-parser>=0.17.0",
+]
+
+[dependency-groups]
+dev = [
+    "coverage>=7.6.1",
+    "mypy>=1.11.2",
+    "pynode>=0.1.0",
+    "pyright>=1.1.406",
+    "ruff>=0.11.11",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = [
+    "taew",
+]
+
+[tool.mypy]
+explicit_package_bases = true
+strict = true
+disable_error_code = [
+    "unused-ignore", 
+    "type-abstract",
+    "import-untyped"
+]
+
+[tool.pyright]
+typeCheckingMode = "strict"
+useLibraryCodeForTypes = true

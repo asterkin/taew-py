@@ -1,0 +1,190 @@
+import sys
+import argparse
+from typing import Any
+from pathlib import Path
+from dataclasses import dataclass, field
+from collections.abc import Sequence, Iterator, Callable, Mapping
+
+from taew.domain.argument import (
+    POSITIONAL_ONLY,
+    POSITIONAL_OR_KEYWORD,
+    KEYWORD_ONLY,
+    VAR_POSITIONAL,
+)
+from taew.ports.for_browsing_code_tree import (
+    Function,
+    Argument,
+)
+from taew.ports.for_stringizing_objects import Loads
+
+
+class Builder:
+    def __init__(
+        self,
+        description: str,
+        version: str,
+        loads: Mapping[type, Loads],
+        cmd_args: Sequence[str],
+    ) -> None:
+        self._root_parser = self._get_root_parser(description, version, cmd_args)
+        self._parser = self._root_parser
+        self._current_subparsers = self._root_parser.add_subparsers()
+        self._cmd_args = cmd_args[1:]
+        # Types supported natively by argparse
+        self._argparse_native_types = {str, int, float}
+        # Custom type converters for types not natively supported by argparse
+        self._loads = loads
+
+    def __iter__(self) -> Iterator[str]:
+        for cmd_arg in self._cmd_args:
+            if cmd_arg not in {"-h", "--help", "-v", "--version"}:
+                yield cmd_arg
+
+    def add_subcommand(self, name: str, description: str) -> None:
+        self._parser = self._current_subparsers.add_parser(
+            name=name, description=description
+        )
+        self._current_subparsers = self._parser.add_subparsers()
+
+    def add_command(self, name: str, description: str, func: Function) -> None:
+        self._parser = self._current_subparsers.add_parser(
+            name=name, description=description, help=description
+        )
+        self._add_command_arguments(func)
+
+    def add_item_description(self, name: str, description: str) -> None:
+        self._current_subparsers.add_parser(
+            name=name, description=description, help=description
+        )
+
+    def error(self, msg: str) -> None:
+        self._parser.error(msg)
+
+    def execute(self, command: Callable[..., Any] | None) -> Any:
+        arg_values = vars(self._root_parser.parse_args())
+        if "pos_args" in arg_values:
+            pos_args = arg_values["pos_args"]
+            del arg_values["pos_args"]
+        else:
+            pos_args = ()
+        kw_args = arg_values
+        if not command:
+            self._root_parser.print_usage()
+            sys.exit(1)
+        return command(*pos_args, **kw_args)
+
+    @staticmethod
+    def _get_root_parser(
+        description: str, version: str, args: Sequence[str]
+    ) -> argparse.ArgumentParser:
+        parser = argparse.ArgumentParser(
+            prog=Path(args[0]).stem, description=description
+        )
+        parser.add_argument(
+            "--version", action="version", version="%(prog)s - v" + version
+        )
+        return parser
+
+    def _add_command_arguments(self, func: Function) -> None:
+        for arg_name, param in func.items():
+            if arg_name != "self":
+                self._add_command_arg(arg_name, param)
+
+    def _get_arg_type(self, func_arg_name: str, func_arg_type: type) -> type:
+        # Check if type is supported natively by argparse, bool (custom), or has converter
+        if (
+            func_arg_type in self._argparse_native_types
+            or func_arg_type is bool
+            or func_arg_type in self._loads
+        ):
+            return func_arg_type
+        else:
+            self._parser.error(
+                f"Unsuppported argument type {func_arg_type} of {func_arg_name}"
+            )
+        return func_arg_type
+
+    def _add_command_arg(self, func_arg_name: str, func_arg: Argument) -> None:
+        func_arg_kind = func_arg.kind
+        func_arg_type = self._get_arg_type(func_arg_name, func_arg.annotation)
+
+        def _str_to_bool(value: str) -> bool:
+            v_l = value.lower()
+            if v_l in {"true", "yes", "1"}:
+                return True
+            elif v_l not in {"false", "no", "0"}:
+                self._parser.error(
+                    f"Invalid boolean `{func_arg_name}` argument value `{value}`."
+                )
+            return False
+
+        def _get_type_converter(arg_type: type) -> Any:
+            if arg_type is bool:
+                return _str_to_bool
+            elif arg_type in self._loads:
+                # Create wrapper that handles errors for the converter
+                loads = self._loads[arg_type]
+
+                def _wrapped_converter(value: str) -> Any:
+                    try:
+                        return loads(value)
+                    except Exception as e:
+                        self._parser.error(
+                            f"Invalid {arg_type.__name__} `{func_arg_name}` argument value `{value}`: {e}"
+                        )
+
+                return _wrapped_converter
+            else:
+                # Native argparse types (str, int, float)
+                return arg_type
+
+        if func_arg_kind in {POSITIONAL_ONLY, POSITIONAL_OR_KEYWORD}:
+            self._parser.add_argument(
+                dest="pos_args",
+                action="append",
+                # positional_only and positional_or_keyword arguments will
+                # be treated as mandatory regardless of whether default is defined or not
+                type=_get_type_converter(func_arg_type),
+                help=func_arg.description,
+                metavar=func_arg_name,
+            )
+        elif func_arg_kind == VAR_POSITIONAL:
+            self._parser.add_argument(
+                dest="pos_args",
+                action="extend",
+                nargs="*",
+                type=_get_type_converter(func_arg_type),
+                help=func_arg.description,
+                metavar=func_arg_name,
+            )
+        elif func_arg_kind == KEYWORD_ONLY:
+            props: dict[str, Any] = {
+                "dest": func_arg_name,
+                "help": func_arg.description,
+            }
+            if func_arg_type is bool:
+                props["action"] = argparse.BooleanOptionalAction
+                self._parser.add_argument(
+                    f"--{func_arg_name.replace('_', '-')}", **props
+                )
+            else:
+                props["type"] = _get_type_converter(func_arg_type)
+                self._parser.add_argument(**props)
+        else:
+            # VAR_KEYWORD (**kwargs) is not supported because:
+            # 1. It's rarely useful in CLI contexts
+            # 2. argparse doesn't have native support for arbitrary --key=value pairs
+            # 3. Would require parse_known_args() which complicates the implementation
+            self._parser.error(
+                f"Unsupported argument type {func_arg_kind} of {func_arg_name}"
+            )
+
+
+@dataclass(eq=False, frozen=True)
+class Build:
+    _loads: Mapping[type, Loads] = field(default_factory=dict[type, Loads])
+
+    def __call__(
+        self, description: str, version: str, cmd_args: Sequence[str]
+    ) -> Builder:
+        return Builder(description, version, self._loads, cmd_args)
