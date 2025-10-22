@@ -1,8 +1,0 @@
-LICENSE
-README.md
-pyproject.toml
-taew.egg-info/PKG-INFO
-taew.egg-info/SOURCES.txt
-taew.egg-info/dependency_links.txt
-taew.egg-info/requires.txt
-taew.egg-info/top_level.txt
