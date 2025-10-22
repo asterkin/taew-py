@@ -1,11 +1,11 @@
 [project]
 name = "taew"
-version = "2.1.0"
+version = "2.1.1"
 description = "Python foundation library that supports rapid development of evolvable MVPs without premature technology lock-in."
 authors = [{ name = "Asher Sterkin", email = "asher.sterkin@gmail.com" }]
 readme = "README.md"
 license = { text = "MIT" }
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 dependencies = [
     "docstring-parser>=0.17.0",
 ]

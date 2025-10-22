@@ -107,9 +107,20 @@ class Argument(AnnotatedEntity):
 
         # Handle typing generics (Optional, Union, etc.)
         origin = get_origin(annotation)
+
+        # Handle type[Any] - accepts any type
+        if origin is type:
+            args = get_args(annotation)
+            if args and args[0] is Any:
+                return isinstance(value, type)
+
         if origin is Union:
             args = get_args(annotation)
-            return any(isinstance(value, arg) for arg in args if isinstance(arg, type))
+            return any(
+                isinstance(value, arg)
+                for arg in args
+                if isinstance(arg, type) and arg is not Any
+            )
         # Handle Optional (which is Union[T, None])
         if origin is type(Union):
             args = get_args(annotation)
@@ -119,7 +130,11 @@ class Argument(AnnotatedEntity):
                     isinstance(non_none_type, type) and isinstance(value, non_none_type)
                 ):
                     return True
-            return any(isinstance(value, arg) for arg in args if isinstance(arg, type))
+            return any(
+                isinstance(value, arg)
+                for arg in args
+                if isinstance(arg, type) and arg is not Any
+            )
 
         return True  # Fallback: permissive for complex types
 
