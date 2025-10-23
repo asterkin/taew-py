@@ -5,7 +5,7 @@ from taew.ports.for_logging import Logger as LoggerProtocol
 
 class TestForLogging(unittest.TestCase):
     def create_stdlib_logger(self) -> LoggerProtocol:
-        from taew.adapters.python.logging.for_logging import Logger
+        from taew.adapters.python.logging.for_logging.logger import Logger
 
         return Logger("test_logger", {"level": logging.INFO})  # type: ignore[return-value]
 
@@ -26,7 +26,7 @@ class TestForLogging(unittest.TestCase):
         self.assertTrue(hasattr(logger, "log"))
 
     def test_logger_with_different_names_creates_different_instances(self) -> None:
-        from taew.adapters.python.logging.for_logging import Logger
+        from taew.adapters.python.logging.for_logging.logger import Logger
 
         logger1 = Logger("test_logger1", {"level": logging.DEBUG})
         logger2 = Logger("test_logger2", {"level": logging.INFO})
@@ -40,7 +40,7 @@ class TestForLogging(unittest.TestCase):
         self.assertEqual(logger2.name, "test_logger2")
 
     def test_configuration_is_applied_only_once(self) -> None:
-        from taew.adapters.python.logging.for_logging import Logger
+        from taew.adapters.python.logging.for_logging.logger import Logger
 
         # Reset the configured flag to test configuration
         Logger._configured = False  # type: ignore[attr-defined]
