@@ -2,20 +2,19 @@
 
 from functools import reduce
 from operator import or_
-from typing import Iterable
 
 from taew.domain.configuration import PortsMapping
 from taew.ports.for_configuring_adapters import Configure
 
 
-def build(configs: Iterable[Configure]) -> PortsMapping:
+def build(*configs: Configure) -> PortsMapping:
     """Build a PortsMapping by calling and merging multiple Configure instances.
 
-    Takes an iterable of Configure instances, calls each one to get its PortsMapping,
+    Takes Configure instances as arguments, calls each one to get its PortsMapping,
     and merges them using the | operator (dict union).
 
     Args:
-        configs: Iterable of Configure instances to call and merge
+        *configs: Configure instances to call and merge
 
     Returns:
         PortsMapping: Merged configuration from all Configure instances
@@ -26,9 +25,9 @@ def build(configs: Iterable[Configure]) -> PortsMapping:
         from taew.adapters.python.ram.for_obtaining_current_datetime.for_configuring_adapters import Configure as ConfigureDateTime
         from taew.domain.logging import INFO
 
-        ports = build([
+        ports = build(
             ConfigureLogging(_name="MyApp", _level=INFO),
             ConfigureDateTime(),
-        ])
+        )
     """
     return reduce(or_, (config() for config in configs))

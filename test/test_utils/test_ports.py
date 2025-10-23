@@ -15,8 +15,7 @@ class TestBuildFunction(unittest.TestCase):
             Configure as ConfigureLogging,
         )
 
-        configs = [ConfigureLogging(_name="TestApp", _level=INFO)]
-        result = build(configs)
+        result = build(ConfigureLogging(_name="TestApp", _level=INFO))
 
         self.assertIsInstance(result, dict)
         self.assertGreater(len(result), 0)
@@ -30,20 +29,19 @@ class TestBuildFunction(unittest.TestCase):
             Configure as ConfigureDateTime,
         )
 
-        configs = [
+        result = build(
             ConfigureLogging(_name="TestApp", _level=DEBUG),
             ConfigureDateTime(),
-        ]
-        result = build(configs)
+        )
 
         self.assertIsInstance(result, dict)
         # Should have configurations from both adapters
         self.assertGreater(len(result), 1)
 
-    def test_build_with_empty_iterable(self) -> None:
-        """Test build with empty iterable raises appropriate error."""
+    def test_build_with_no_arguments(self) -> None:
+        """Test build with no arguments raises appropriate error."""
         with self.assertRaises((TypeError, ValueError)):
-            build([])
+            build()
 
     def test_build_merges_configurations(self) -> None:
         """Test that build properly merges multiple configurations."""
@@ -58,7 +56,7 @@ class TestBuildFunction(unittest.TestCase):
         config2 = ConfigureDateTime()
 
         # Build from configs
-        result = build([config1, config2])
+        result = build(config1, config2)
 
         # Each config should contribute to the result
         ports1 = config1()
@@ -76,7 +74,7 @@ class TestBuildFunction(unittest.TestCase):
             Configure as ConfigureDateTime,
         )
 
-        result = build([ConfigureDateTime()])
+        result = build(ConfigureDateTime())
 
         # Should be a dict-like PortsMapping
         self.assertIsInstance(result, dict)
