@@ -31,4 +31,4 @@ class Configure(ConfigureBase):
         Returns:
             dict[str, object]: A dictionary of keyword arguments.
         """
-        return self._values
+        return {"kwargs": self._values}
