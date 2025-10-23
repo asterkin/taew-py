@@ -6,7 +6,7 @@ from taew.ports.for_obtaining_current_datetime import Now as NowProtocol
 
 class TestForObtainingCurrentDateTime(unittest.TestCase):
     def create_now_adapter(self) -> NowProtocol:
-        from taew.adapters.python.ram.for_obtaining_current_datetime import Now
+        from taew.adapters.python.ram.for_obtaining_current_datetime.now import Now
 
         test_datetime = datetime(2024, 1, 1, 12, 0, 0)
         return Now(_now=test_datetime)
