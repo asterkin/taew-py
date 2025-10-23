@@ -25,7 +25,7 @@ class Configure(ConfigureBase, Generic[K, V]):
 
     _ports: str = field(kw_only=True, default="ports")
     _root_marker: str = field(kw_only=True, default="/adapters")
-    _values: dict[K, V] = field(kw_only=True, default_factory=dict)
+    _values: dict[K, V] = field(kw_only=True, default_factory=dict[K, V])
 
     def _collect_kwargs(self) -> dict[str, object]:
         """Collects keyword arguments for configuring the adapter.
