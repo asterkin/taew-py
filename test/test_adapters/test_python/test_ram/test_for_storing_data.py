@@ -2,8 +2,10 @@ import unittest
 from typing import TypeAlias
 from dataclasses import dataclass
 
-from taew.adapters.python.ram.for_storing_data import DataRepository
-from taew.adapters.python.ram.for_storing_data import MutableDataRepository
+from taew.adapters.python.ram.for_storing_data.data_repository import DataRepository
+from taew.adapters.python.ram.for_storing_data.mutable_data_repository import (
+    MutableDataRepository,
+)
 
 
 @dataclass(frozen=True)
@@ -42,7 +44,9 @@ class TestDataRepository(unittest.TestCase):
         mutable_repo["rec3"] = SampleRecord(id="rec3", name="Charlie", score=92)
 
         # Create read-only repository and copy data
-        from taew.adapters.python.ram.for_storing_data import DataRepository
+        from taew.adapters.python.ram.for_storing_data.data_repository import (
+            DataRepository,
+        )
 
         read_only_repo = DataRepository[str, SampleRecord](mutable_repo)
         return read_only_repo
