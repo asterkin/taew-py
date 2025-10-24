@@ -2,7 +2,7 @@ import sys
 import argparse
 from typing import Any
 from pathlib import Path
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from collections.abc import Sequence, Iterator, Callable
 
 from taew.domain.argument import (
@@ -16,28 +16,31 @@ from taew.ports.for_browsing_code_tree import (
     Argument,
 )
 from taew.ports import for_stringizing_objects as stringizing_port
-from taew.ports.for_binding_interfaces import Bind as BindProtocol
-from taew.ports.for_finding_configurations import Find as FindProtocol
 from taew.ports.for_stringizing_objects import Loads
+from ._common import BuildBase
 
 
+@dataclass(eq=False)
 class Builder:
-    def __init__(
-        self,
-        description: str,
-        version: str,
-        find: FindProtocol,
-        bind: BindProtocol,
-        cmd_args: Sequence[str],
-    ) -> None:
-        self._root_parser = self._get_root_parser(description, version, cmd_args)
+    _config: BuildBase
+    description: str
+    version: str
+    cmd_args: Sequence[str]
+    _root_parser: argparse.ArgumentParser = field(init=False)
+    _parser: argparse.ArgumentParser = field(init=False)
+    _current_subparsers: Any = field(default=None, init=False)
+    _cmd_args: Sequence[str] = field(default_factory=tuple, init=False)
+    _argparse_native_types: set[type] = field(
+        default_factory=lambda: {str, int, float}, init=False
+    )
+
+    def __post_init__(self) -> None:
+        self._root_parser = self._get_root_parser(
+            self.description, self.version, self.cmd_args
+        )
         self._parser = self._root_parser
         self._current_subparsers = self._root_parser.add_subparsers()
-        self._cmd_args = cmd_args[1:]
-        # Types supported natively by argparse
-        self._argparse_native_types = {str, int, float}
-        self._find = find
-        self._bind = bind
+        self._cmd_args = self.cmd_args[1:]
 
     def __iter__(self) -> Iterator[str]:
         for cmd_arg in self._cmd_args:
@@ -170,14 +173,14 @@ class Builder:
 
     def _resolve_loads(self, func_arg_name: str, annotation: type) -> Loads:
         try:
-            _, port_configuration = self._find(annotation, stringizing_port)
+            _, port_configuration = self._config.find(annotation, stringizing_port)
         except Exception as exc:  # pragma: no cover - parser.error exits
             self._parser.error(
                 f"Unsupported argument type {annotation} of {func_arg_name}: {exc}"
             )
 
         try:
-            return self._bind(Loads, {stringizing_port: port_configuration})
+            return self._config.bind(Loads, {stringizing_port: port_configuration})
         except Exception as exc:  # pragma: no cover - parser.error exits
             self._parser.error(
                 f"Failed to bind string parser for {annotation} "
@@ -187,11 +190,13 @@ class Builder:
 
 
 @dataclass(eq=False, frozen=True)
-class Build:
-    _find: FindProtocol
-    _bind: BindProtocol
-
+class Build(BuildBase):
     def __call__(
         self, description: str, version: str, cmd_args: Sequence[str]
     ) -> Builder:
-        return Builder(description, version, self._find, self._bind, cmd_args)
+        return Builder(
+            _config=self,
+            description=description,
+            version=version,
+            cmd_args=cmd_args,
+        )
