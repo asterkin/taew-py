@@ -2,8 +2,8 @@ import sys
 import argparse
 from typing import Any
 from pathlib import Path
-from dataclasses import dataclass, field
-from collections.abc import Sequence, Iterator, Callable, Mapping
+from dataclasses import dataclass
+from collections.abc import Sequence, Iterator, Callable
 
 from taew.domain.argument import (
     POSITIONAL_ONLY,
@@ -15,6 +15,9 @@ from taew.ports.for_browsing_code_tree import (
     Function,
     Argument,
 )
+from taew.ports import for_stringizing_objects as stringizing_port
+from taew.ports.for_binding_interfaces import Bind as BindProtocol
+from taew.ports.for_finding_configurations import Find as FindProtocol
 from taew.ports.for_stringizing_objects import Loads
 
 
@@ -23,7 +26,8 @@ class Builder:
         self,
         description: str,
         version: str,
-        loads: Mapping[type, Loads],
+        find: FindProtocol,
+        bind: BindProtocol,
         cmd_args: Sequence[str],
     ) -> None:
         self._root_parser = self._get_root_parser(description, version, cmd_args)
@@ -32,8 +36,8 @@ class Builder:
         self._cmd_args = cmd_args[1:]
         # Types supported natively by argparse
         self._argparse_native_types = {str, int, float}
-        # Custom type converters for types not natively supported by argparse
-        self._loads = loads
+        self._find = find
+        self._bind = bind
 
     def __iter__(self) -> Iterator[str]:
         for cmd_arg in self._cmd_args:
@@ -90,23 +94,9 @@ class Builder:
             if arg_name != "self":
                 self._add_command_arg(arg_name, param)
 
-    def _get_arg_type(self, func_arg_name: str, func_arg_type: type) -> type:
-        # Check if type is supported natively by argparse, bool (custom), or has converter
-        if (
-            func_arg_type in self._argparse_native_types
-            or func_arg_type is bool
-            or func_arg_type in self._loads
-        ):
-            return func_arg_type
-        else:
-            self._parser.error(
-                f"Unsuppported argument type {func_arg_type} of {func_arg_name}"
-            )
-        return func_arg_type
-
     def _add_command_arg(self, func_arg_name: str, func_arg: Argument) -> None:
         func_arg_kind = func_arg.kind
-        func_arg_type = self._get_arg_type(func_arg_name, func_arg.annotation)
+        func_arg_type = func_arg.annotation
 
         def _str_to_bool(value: str) -> bool:
             v_l = value.lower()
@@ -121,22 +111,21 @@ class Builder:
         def _get_type_converter(arg_type: type) -> Any:
             if arg_type is bool:
                 return _str_to_bool
-            elif arg_type in self._loads:
-                # Create wrapper that handles errors for the converter
-                loads = self._loads[arg_type]
-
-                def _wrapped_converter(value: str) -> Any:
-                    try:
-                        return loads(value)
-                    except Exception as e:
-                        self._parser.error(
-                            f"Invalid {arg_type.__name__} `{func_arg_name}` argument value `{value}`: {e}"
-                        )
-
-                return _wrapped_converter
-            else:
-                # Native argparse types (str, int, float)
+            if arg_type in self._argparse_native_types:
                 return arg_type
+
+            loads = self._resolve_loads(func_arg_name, arg_type)
+
+            def _wrapped_converter(value: str) -> Any:
+                try:
+                    return loads(value)
+                except Exception as e:
+                    self._parser.error(
+                        f"Invalid {getattr(arg_type, '__name__', repr(arg_type))} "
+                        f"`{func_arg_name}` argument value `{value}`: {e}"
+                    )
+
+            return _wrapped_converter
 
         if func_arg_kind in {POSITIONAL_ONLY, POSITIONAL_OR_KEYWORD}:
             self._parser.add_argument(
@@ -179,12 +168,30 @@ class Builder:
                 f"Unsupported argument type {func_arg_kind} of {func_arg_name}"
             )
 
+    def _resolve_loads(self, func_arg_name: str, annotation: type) -> Loads:
+        try:
+            _, port_configuration = self._find(annotation, stringizing_port)
+        except Exception as exc:  # pragma: no cover - parser.error exits
+            self._parser.error(
+                f"Unsupported argument type {annotation} of {func_arg_name}: {exc}"
+            )
+
+        try:
+            return self._bind(Loads, {stringizing_port: port_configuration})
+        except Exception as exc:  # pragma: no cover - parser.error exits
+            self._parser.error(
+                f"Failed to bind string parser for {annotation} "
+                f"of {func_arg_name}: {exc}"
+            )
+        raise AssertionError("unreachable")
+
 
 @dataclass(eq=False, frozen=True)
 class Build:
-    _loads: Mapping[type, Loads] = field(default_factory=dict[type, Loads])
+    _find: FindProtocol
+    _bind: BindProtocol
 
     def __call__(
         self, description: str, version: str, cmd_args: Sequence[str]
     ) -> Builder:
-        return Builder(description, version, self._loads, cmd_args)
+        return Builder(description, version, self._find, self._bind, cmd_args)

@@ -3,13 +3,41 @@ import io
 import sys
 from typing import Any
 from collections.abc import Sequence
-from taew.domain.argument import POSITIONAL_OR_KEYWORD
 from contextlib import redirect_stdout, redirect_stderr
+
+from taew.domain.argument import POSITIONAL_OR_KEYWORD
+from taew.domain.configuration import PortConfigurationDict
+from taew.ports import for_stringizing_objects as stringizing_port
 from taew.ports.for_building_command_parsers import Builder as BuilderProtocol
 from taew.ports.for_browsing_code_tree import (
     Function as FunctionProtocol,
     Module as ModuleProtocol,
 )
+from taew.ports.for_stringizing_objects import Loads
+
+
+class StubFind:
+    def __init__(self, mapping: dict[Any, tuple[type[Any], Any]] | None = None) -> None:
+        self._mapping = mapping or {}
+        self.calls: list[tuple[Any, Any]] = []
+
+    def __call__(self, arg: Any, port: Any) -> tuple[type[Any], Any]:
+        self.calls.append((arg, port))
+        if arg in self._mapping:
+            return self._mapping[arg]
+        raise LookupError(f"No configuration for {arg!r}")
+
+
+class StubBind:
+    def __init__(self, loads: Loads | None) -> None:
+        self._loads = loads
+        self.calls: list[tuple[type[Any], Any]] = []
+
+    def __call__(self, interface: type[Any], ports: Any) -> Loads:
+        self.calls.append((interface, ports))
+        if self._loads is None:
+            raise LookupError("No loads configured")
+        return self._loads
 
 
 class TestBuilder(unittest.TestCase):
@@ -55,13 +83,21 @@ class TestBuilder(unittest.TestCase):
         return Module("test module", items={"test_function": self._get_func()})
 
     def _get_builder(
-        self, description: str, version: str, cmd_args: Sequence[str]
+        self,
+        description: str,
+        version: str,
+        cmd_args: Sequence[str],
+        *,
+        find_mapping: dict[Any, tuple[type[Any], Any]] | None = None,
+        loads: Loads | None = None,
     ) -> BuilderProtocol:
         from taew.adapters.python.argparse.for_building_command_parsers.build import (
             Build,
         )
 
-        build = Build()
+        self._find_stub = StubFind(find_mapping)
+        self._bind_stub = StubBind(loads)
+        build = Build(self._find_stub, self._bind_stub)  # type: ignore
         return build(description, version, cmd_args)
 
     def setUp(self) -> None:
@@ -410,6 +446,61 @@ class TestBuilder(unittest.TestCase):
         with self.assertRaises(SystemExit):
             builder = self._get_builder("test cli", "0.1.0", args)
             builder.add_command("cmd", "Command with kwargs", func)
+
+    def test_custom_type_uses_find_and_bind(self) -> None:
+        class Custom: ...
+
+        def custom_loads(value: str) -> str:
+            return f"parsed:{value}"
+
+        from taew.adapters.python.ram.for_browsing_code_tree.function import Function
+        from taew.adapters.python.ram.for_browsing_code_tree.annotated_entity import (
+            ReturnValue,
+            Argument,
+        )
+
+        func = Function(
+            description="Custom function",
+            items_=(
+                (
+                    "value",
+                    Argument(
+                        annotation=Custom,
+                        spec=(Custom, ()),
+                        description="custom",
+                        _default_value=None,
+                        _has_default=True,
+                        kind=POSITIONAL_OR_KEYWORD,
+                    ),
+                ),
+            ),
+            returns=ReturnValue(None, (None, ()), ""),
+        )
+
+        port_config = PortConfigurationDict(adapter="custom.for_stringizing_objects")
+
+        args = ["myapp", "cmd", "raw"]
+        sys.argv = args
+        builder = self._get_builder(
+            "test cli",
+            "0.1.0",
+            args,
+            find_mapping={Custom: (Custom, port_config)},
+            loads=custom_loads,  # type: ignore
+        )
+        builder.add_command("cmd", "desc", func)
+
+        def run(value: Any) -> str:
+            self.assertEqual(value, "parsed:raw")
+            return "ok"
+
+        result = builder.execute(run)
+        self.assertEqual(result, "ok")
+        self.assertEqual(self._find_stub.calls, [(Custom, stringizing_port)])
+        self.assertEqual(len(self._bind_stub.calls), 1)
+        interface, ports = self._bind_stub.calls[0]
+        self.assertIs(interface, Loads)
+        self.assertEqual(ports[stringizing_port], port_config)
 
     def test_error_method(self) -> None:
         """Test the error method directly"""
