@@ -23,7 +23,7 @@ class TestDatetimeConfigureIntegration(unittest.TestCase):
         from taew.adapters.python.inspect.for_browsing_code_tree.root import (
             Root as InspectRoot,
         )
-        from taew.adapters.launch_time.for_binding_interfaces.main import Bind
+        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
 
         ports = cfg()
         root = InspectRoot(Path("."))

@@ -28,7 +28,7 @@ availability under a separate port module without using sys.modules directly."""
 
 class TestBind(TestLunchTimeAdapterBase):
     def _make_bind(self, root: RootProtocol) -> BindProtocol:
-        from taew.adapters.launch_time.for_binding_interfaces.main import Bind
+        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
 
         return Bind(root)
 
