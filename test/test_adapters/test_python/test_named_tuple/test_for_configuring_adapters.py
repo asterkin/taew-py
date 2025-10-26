@@ -52,7 +52,7 @@ class TestNamedTupleConfigureIntegration(unittest.TestCase):
         configure: ConfigureProtocol = self._get_configure_simple()
         ports = configure()
 
-        from taew.adapters.launch_time.for_binding_interfaces.main import Bind
+        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
         from taew.adapters.python.inspect.for_browsing_code_tree.root import (
             Root as InspectRoot,
         )
@@ -85,7 +85,7 @@ class TestNamedTupleConfigureIntegration(unittest.TestCase):
         configure: ConfigureProtocol = self._get_configure_datetime(variants)
         ports = configure()
 
-        from taew.adapters.launch_time.for_binding_interfaces.main import Bind
+        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
         from taew.adapters.python.inspect.for_browsing_code_tree.root import (
             Root as InspectRoot,
         )
@@ -131,7 +131,7 @@ class TestNamedTupleConfigureIntegration(unittest.TestCase):
         configure: ConfigureProtocol = self._get_configure_simple()
         ports = configure()
 
-        from taew.adapters.launch_time.for_binding_interfaces.main import Bind
+        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
         from taew.adapters.python.inspect.for_browsing_code_tree.root import (
             Root as InspectRoot,
         )
@@ -151,7 +151,7 @@ class TestNamedTupleConfigureIntegration(unittest.TestCase):
         configure: ConfigureProtocol = self._get_configure_simple()
         ports = configure()
 
-        from taew.adapters.launch_time.for_binding_interfaces.main import Bind
+        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
         from taew.adapters.python.inspect.for_browsing_code_tree.root import (
             Root as InspectRoot,
         )
@@ -171,7 +171,7 @@ class TestNamedTupleConfigureIntegration(unittest.TestCase):
         configure: ConfigureProtocol = self._get_configure_simple()
         ports = configure()
 
-        from taew.adapters.launch_time.for_binding_interfaces.main import Bind
+        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
         from taew.adapters.python.inspect.for_browsing_code_tree.root import (
             Root as InspectRoot,
         )
@@ -202,7 +202,7 @@ class TestNamedTupleConfigureIntegration(unittest.TestCase):
         configure: ConfigureProtocol = self._get_configure_simple()
         ports = configure()
 
-        from taew.adapters.launch_time.for_binding_interfaces.main import Bind
+        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
         from taew.adapters.python.inspect.for_browsing_code_tree.root import (
             Root as InspectRoot,
         )
