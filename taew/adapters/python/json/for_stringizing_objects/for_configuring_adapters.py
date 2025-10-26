@@ -10,7 +10,7 @@ from .dumps import DumpsBase
 from .loads import LoadsBase
 
 
-@dataclass(eq=False, frozen=True)
+@dataclass(eq=False, frozen=True, kw_only=True)
 class Configure(DumpsBase, LoadsBase, ConfigureBase):
     """Configurator for JSON stringizing adapter with marshalling support.
 

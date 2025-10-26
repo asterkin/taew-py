@@ -11,7 +11,7 @@ from taew.domain.configuration import (
 from taew.ports.for_configuring_adapters import Configure as ConfigureProtocol
 
 
-@dataclass(eq=False, frozen=True)
+@dataclass(eq=False, frozen=True, kw_only=True)
 class Configure:
     """Dataclass-based configurator that auto-builds PortsMapping.
 

@@ -1,5 +1,5 @@
 from types import ModuleType
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, get_args, get_origin
 
 from taew.ports import for_configuring_adapters
@@ -11,6 +11,8 @@ from ._common import BuildBase
 @dataclass(eq=False, frozen=True)
 class Build(BuildBase):
     """Build PortsMapping entries for configurator binding based on type annotations."""
+
+    _variants: dict[type, str | dict[str, object]] = field(default_factory=lambda: {})
 
     def __call__(
         self,
@@ -67,6 +69,6 @@ class Build(BuildBase):
             kwargs["_variants"] = self._variants
 
         port_name = port.__name__.rsplit(".", 1)[-1]
-        adapter_path = f"{adapter}.{port_name}"
+        adapter_path = f"taew.adapters.python.{adapter}.{port_name}"
 
         return base, adapter_path, kwargs
