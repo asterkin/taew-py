@@ -3,7 +3,7 @@ from typing import Any
 from collections.abc import Callable
 
 from taew.domain.configuration import PortConfigurationDict, PortsMapping
-from taew.adapters.python.dataclass.for_finding_configurations import Find
+from taew.adapters.python.dataclass.for_finding_configurations.find import Find
 from taew.ports import (
     for_configuring_adapters as configure_port,
     for_stringizing_objects as stringizing_port,

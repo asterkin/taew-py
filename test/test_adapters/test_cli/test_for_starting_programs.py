@@ -88,11 +88,11 @@ class TestMain(unittest.TestCase):
         )
 
     def _get_main(self, root: Optional[PackageProtocol] = None) -> MainProtocol:
-        from taew.adapters.cli.for_starting_programs import Main
+        from taew.adapters.cli.for_starting_programs.main import Main
 
         return Main(
             _root=self._get_package() if root is None else root,
-            _ports=self._ports,
+            _ports_mapping=self._ports,
             _binder=self._mock_binder,
             _build=self._mock_build,
             _dumps=self._mock_dumps,
@@ -165,11 +165,11 @@ class TestMain(unittest.TestCase):
             return Dumps()
 
         # Create main with real dumps adapter
-        from taew.adapters.cli.for_starting_programs import Main
+        from taew.adapters.cli.for_starting_programs.main import Main
 
         main = Main(
             _root=self._get_package(),
-            _ports=self._ports,
+            _ports_mapping=self._ports,
             _binder=self._mock_binder,
             _build=self._mock_build,
             _dumps=_get_real_dumps(),
@@ -204,11 +204,11 @@ class TestMain(unittest.TestCase):
         mock_build = Mock()
         mock_build.return_value = mock_builder
 
-        from taew.adapters.cli.for_starting_programs import Main
+        from taew.adapters.cli.for_starting_programs.main import Main
 
         main = Main(
             _root=root,
-            _ports=self._ports,
+            _ports_mapping=self._ports,
             _binder=self._mock_binder,
             _build=mock_build,
             _dumps=self._mock_dumps,

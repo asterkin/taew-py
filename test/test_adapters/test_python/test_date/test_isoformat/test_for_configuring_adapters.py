@@ -24,7 +24,7 @@ class TestDateIsoformatConfigureIntegration(unittest.TestCase):
         configure: ConfigureProtocol = self._get_configure()
         ports = configure()
 
-        from taew.adapters.launch_time.for_binding_interfaces import Bind
+        from taew.adapters.launch_time.for_binding_interfaces.main import Bind
         from taew.adapters.python.inspect.for_browsing_code_tree.root import (
             Root as InspectRoot,
         )
@@ -62,7 +62,7 @@ class TestDateIsoformatConfigureIntegration(unittest.TestCase):
         configure: ConfigureProtocol = self._get_configure("%Y/%m/%d")
         ports = configure()
 
-        from taew.adapters.launch_time.for_binding_interfaces import Bind
+        from taew.adapters.launch_time.for_binding_interfaces.main import Bind
         from taew.adapters.python.inspect.for_browsing_code_tree.root import (
             Root as InspectRoot,
         )
@@ -89,7 +89,7 @@ class TestDateIsoformatConfigureIntegration(unittest.TestCase):
         configure: ConfigureProtocol = self._get_configure()
         ports = configure()
 
-        from taew.adapters.launch_time.for_binding_interfaces import Bind
+        from taew.adapters.launch_time.for_binding_interfaces.main import Bind
         from taew.adapters.python.inspect.for_browsing_code_tree.root import (
             Root as InspectRoot,
         )
@@ -111,7 +111,7 @@ class TestDateIsoformatConfigureIntegration(unittest.TestCase):
         configure: ConfigureProtocol = self._get_configure()
         ports = configure()
 
-        from taew.adapters.launch_time.for_binding_interfaces import Bind
+        from taew.adapters.launch_time.for_binding_interfaces.main import Bind
         from taew.adapters.python.inspect.for_browsing_code_tree.root import (
             Root as InspectRoot,
         )
@@ -133,7 +133,7 @@ class TestDateIsoformatConfigureIntegration(unittest.TestCase):
         configure: ConfigureProtocol = self._get_configure()
         ports = configure()
 
-        from taew.adapters.launch_time.for_binding_interfaces import Bind
+        from taew.adapters.launch_time.for_binding_interfaces.main import Bind
         from taew.adapters.python.inspect.for_browsing_code_tree.root import (
             Root as InspectRoot,
         )
@@ -162,7 +162,7 @@ class TestDateIsoformatConfigureIntegration(unittest.TestCase):
         configure: ConfigureProtocol = self._get_configure("%Y/%m/%d")
         ports = configure()
 
-        from taew.adapters.launch_time.for_binding_interfaces import Bind
+        from taew.adapters.launch_time.for_binding_interfaces.main import Bind
         from taew.adapters.python.inspect.for_browsing_code_tree.root import (
             Root as InspectRoot,
         )
@@ -192,7 +192,7 @@ class TestDateIsoformatConfigureIntegration(unittest.TestCase):
         configure: ConfigureProtocol = self._get_configure()
         ports = configure()
 
-        from taew.adapters.launch_time.for_binding_interfaces import Bind
+        from taew.adapters.launch_time.for_binding_interfaces.main import Bind
         from taew.adapters.python.inspect.for_browsing_code_tree.root import (
             Root as InspectRoot,
         )

@@ -3,7 +3,7 @@ from datetime import date
 from typing import NamedTuple, Any
 
 from taew.domain.configuration import PortConfigurationDict
-from taew.adapters.python.typing.for_building_config_ports_mapping import Build
+from taew.adapters.python.typing.for_building_config_ports_mapping.build import Build
 from taew.ports import (
     for_configuring_adapters,
     for_stringizing_objects,
