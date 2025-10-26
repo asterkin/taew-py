@@ -20,7 +20,7 @@ class Build(BuildBase):
         base, adapter_path, kwargs = self._analyse_type(arg, port)
         ports: PortsMapping = {
             for_configuring_adapters: PortConfigurationDict(
-                adapter=adapter_path, kwargs=kwargs
+                adapter=adapter_path, kwargs=kwargs, root=self._root
             )
         }
         return base, ports

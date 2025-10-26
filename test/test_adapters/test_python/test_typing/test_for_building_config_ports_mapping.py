@@ -29,6 +29,7 @@ class TestBuildConfigPortsMapping(unittest.TestCase):
                 "expected_config": PortConfigurationDict(
                     adapter="int.for_stringizing_objects",
                     kwargs={},
+                    root="taew.adapters.python",
                 ),
             },
             {
@@ -40,6 +41,7 @@ class TestBuildConfigPortsMapping(unittest.TestCase):
                 "expected_config": PortConfigurationDict(
                     adapter="list.for_streaming_objects",
                     kwargs={"_args": (int,)},
+                    root="taew.adapters.python",
                 ),
             },
             {
@@ -51,6 +53,7 @@ class TestBuildConfigPortsMapping(unittest.TestCase):
                 "expected_config": PortConfigurationDict(
                     adapter="named_tuple.for_stringizing_objects",
                     kwargs={"_args": (SampleTuple,)},
+                    root="taew.adapters.python",
                 ),
             },
             {
@@ -62,6 +65,7 @@ class TestBuildConfigPortsMapping(unittest.TestCase):
                 "expected_config": PortConfigurationDict(
                     adapter="date.isoformat.for_stringizing_objects",
                     kwargs={"_variants": {date: "isoformat"}},
+                    root="taew.adapters.python",
                 ),
             },
             {
@@ -78,6 +82,7 @@ class TestBuildConfigPortsMapping(unittest.TestCase):
                             date: {"_variant": "isoformat", "_format": "%m/%d"}
                         },
                     },
+                    root="taew.adapters.python",
                 ),
             },
         ]
