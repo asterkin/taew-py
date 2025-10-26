@@ -2,7 +2,6 @@ from typing import Any
 from dataclasses import dataclass
 from taew.utils.strings import snake_to_pascal
 from collections.abc import Sequence, Callable
-from taew.domain.configuration import PortsMapping
 from taew.ports.for_binding_interfaces import Bind
 from taew.ports.for_stringizing_objects import Dumps
 from taew.ports.for_building_command_parsers import Build, Builder
@@ -17,16 +16,16 @@ from taew.ports.for_browsing_code_tree import (
     is_module,
 )
 
+from ._common import MainBase
+
 InstanceType = Callable[..., Any]
 ItemType = Package | Module | Class | Function
 ResultType = tuple[InstanceType | None, ItemType]
 
 
 @dataclass(eq=False, frozen=True)
-class Main:
-    _root: Package
+class Main(MainBase):
     _binder: Bind
-    _ports: PortsMapping
     _build: Build
     _dumps: Dumps
 
@@ -59,7 +58,7 @@ class Main:
         Create an instance of the class.
         """
         try:
-            instance = self._binder.create_instance(item, self._ports)
+            instance = self._binder.create_instance(item, self._ports_mapping)
             if callable(instance):
                 return instance
             builder.error(

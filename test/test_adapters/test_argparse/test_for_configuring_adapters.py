@@ -23,9 +23,7 @@ class TestArgparseBuildCommandParsersConfigure(unittest.TestCase):
             Configure,
         )
 
-        find_stub = StubFind()
-        bind_stub = StubBind()
-        return Configure(_find=find_stub, _bind=bind_stub)  # type: ignore
+        return Configure()  # type: ignore
 
     def test_builds_ports_mapping(self) -> None:
         configure = self._get_configure()
@@ -38,9 +36,6 @@ class TestArgparseBuildCommandParsersConfigure(unittest.TestCase):
         pc_dict = cast(PortConfigurationDict, pc)
 
         self.assertEqual(pc_dict.adapter, "taew.adapters.python.argparse")
-        # BuildBase provides _find and _bind
-        self.assertIn("_find", pc_dict.kwargs)
-        self.assertIn("_bind", pc_dict.kwargs)
 
 
 if __name__ == "__main__":

@@ -1,16 +1,16 @@
 from types import ModuleType
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, get_args, get_origin
 
 from taew.ports import for_configuring_adapters
 from taew.domain.configuration import PortConfigurationDict, PortsMapping
 
+from ._common import BuildBase
+
 
 @dataclass(eq=False, frozen=True)
-class Build:
+class Build(BuildBase):
     """Build PortsMapping entries for configurator binding based on type annotations."""
-
-    _variants: dict[type, str | dict[str, object]] = field(default_factory=lambda: {})
 
     def __call__(
         self,

@@ -17,12 +17,14 @@ from taew.ports.for_browsing_code_tree import (
 )
 from taew.ports import for_stringizing_objects as stringizing_port
 from taew.ports.for_stringizing_objects import Loads
-from ._common import BuildBase
+from taew.ports.for_binding_interfaces import Bind as BindProtocol
+from taew.ports.for_finding_configurations import Find as FindProtocol
 
 
 @dataclass(eq=False)
 class Builder:
-    _config: BuildBase
+    _find: FindProtocol
+    _bind: BindProtocol
     description: str
     version: str
     cmd_args: Sequence[str]
@@ -173,14 +175,14 @@ class Builder:
 
     def _resolve_loads(self, func_arg_name: str, annotation: type) -> Loads:
         try:
-            _, port_configuration = self._config.find(annotation, stringizing_port)
+            _, port_configuration = self._find(annotation, stringizing_port)
         except Exception as exc:  # pragma: no cover - parser.error exits
             self._parser.error(
                 f"Unsupported argument type {annotation} of {func_arg_name}: {exc}"
             )
 
         try:
-            return self._config.bind(Loads, {stringizing_port: port_configuration})
+            return self._bind(Loads, {stringizing_port: port_configuration})
         except Exception as exc:  # pragma: no cover - parser.error exits
             self._parser.error(
                 f"Failed to bind string parser for {annotation} "
@@ -190,12 +192,16 @@ class Builder:
 
 
 @dataclass(eq=False, frozen=True)
-class Build(BuildBase):
+class Build:
+    _find: FindProtocol
+    _bind: BindProtocol
+
     def __call__(
         self, description: str, version: str, cmd_args: Sequence[str]
     ) -> Builder:
         return Builder(
-            _config=self,
+            _find=self._find,
+            _bind=self._bind,
             description=description,
             version=version,
             cmd_args=cmd_args,

@@ -31,13 +31,13 @@ from taew.ports.for_browsing_code_tree import (
     is_interface_mapping,
 )
 
+from ._common import BindBase
+
 T = TypeVar("T")
 
 
-@dataclass
-class Bind:
-    _root: Root
-
+@dataclass(eq=False, frozen=True)
+class Bind(BindBase):
     def _get_port_by_interface(self, interface: type) -> Any:
         """Return the port module for a given interface type."""
         return sys.modules[interface.__module__]

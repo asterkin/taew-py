@@ -25,7 +25,7 @@ class TestSetStreaming(unittest.TestCase):
         from taew.adapters.python.inspect.for_browsing_code_tree.root import (
             Root as InspectRoot,
         )
-        from taew.adapters.launch_time.for_binding_interfaces import Bind
+        from taew.adapters.launch_time.for_binding_interfaces.main import Bind
 
         root = InspectRoot(Path("."))
         bind = Bind(root)
@@ -55,7 +55,7 @@ class TestSetStreaming(unittest.TestCase):
         from taew.adapters.python.inspect.for_browsing_code_tree.root import (
             Root as InspectRoot,
         )
-        from taew.adapters.launch_time.for_binding_interfaces import Bind
+        from taew.adapters.launch_time.for_binding_interfaces.main import Bind
 
         root = InspectRoot(Path("."))
         bind = Bind(root)
