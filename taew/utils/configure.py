@@ -1,4 +1,4 @@
-"""Utility functions for working with ports configuration."""
+"""Utility functions for configuring ports."""
 
 from functools import reduce
 from operator import or_
@@ -7,7 +7,7 @@ from taew.domain.configuration import PortsMapping
 from taew.ports.for_configuring_adapters import Configure
 
 
-def build(*configs: Configure) -> PortsMapping:
+def configure(*configs: Configure) -> PortsMapping:
     """Build a PortsMapping by calling and merging multiple Configure instances.
 
     Takes Configure instances as arguments, calls each one to get its PortsMapping,
@@ -20,12 +20,12 @@ def build(*configs: Configure) -> PortsMapping:
         PortsMapping: Merged configuration from all Configure instances
 
     Example:
-        from taew.utils.ports import build
+        from taew.utils.configure import configure
         from taew.adapters.python.logging.for_logging.for_configuring_adapters import Configure as ConfigureLogging
         from taew.adapters.python.ram.for_obtaining_current_datetime.for_configuring_adapters import Configure as ConfigureDateTime
         from taew.domain.logging import INFO
 
-        ports = build(
+        ports = configure(
             ConfigureLogging(_name="MyApp", _level=INFO),
             ConfigureDateTime(),
         )
