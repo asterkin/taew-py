@@ -1,27 +1,27 @@
-"""Tests for taew.utils.ports module."""
+"""Tests for taew.utils.configure module."""
 
 import unittest
 
 from taew.domain.logging import INFO, DEBUG
-from taew.utils.ports import build
+from taew.utils.configure import configure
 
 
-class TestBuildFunction(unittest.TestCase):
-    """Test the build function for merging Configure instances."""
+class TestConfigureFunction(unittest.TestCase):
+    """Test the configure function for merging Configure instances."""
 
-    def test_build_with_single_configure(self) -> None:
-        """Test build with a single Configure instance."""
+    def test_configure_with_single_configure(self) -> None:
+        """Test configure with a single Configure instance."""
         from taew.adapters.python.logging.for_logging.for_configuring_adapters import (
             Configure as ConfigureLogging,
         )
 
-        result = build(ConfigureLogging(_name="TestApp", _level=INFO))
+        result = configure(ConfigureLogging(_name="TestApp", _level=INFO))
 
         self.assertIsInstance(result, dict)
         self.assertGreater(len(result), 0)
 
-    def test_build_with_multiple_configures(self) -> None:
-        """Test build with multiple Configure instances."""
+    def test_configure_with_multiple_configures(self) -> None:
+        """Test configure with multiple Configure instances."""
         from taew.adapters.python.logging.for_logging.for_configuring_adapters import (
             Configure as ConfigureLogging,
         )
@@ -29,7 +29,7 @@ class TestBuildFunction(unittest.TestCase):
             Configure as ConfigureDateTime,
         )
 
-        result = build(
+        result = configure(
             ConfigureLogging(_name="TestApp", _level=DEBUG),
             ConfigureDateTime(),
         )
@@ -38,13 +38,13 @@ class TestBuildFunction(unittest.TestCase):
         # Should have configurations from both adapters
         self.assertGreater(len(result), 1)
 
-    def test_build_with_no_arguments(self) -> None:
-        """Test build with no arguments raises appropriate error."""
+    def test_configure_with_no_arguments(self) -> None:
+        """Test configure with no arguments raises appropriate error."""
         with self.assertRaises((TypeError, ValueError)):
-            build()
+            configure()
 
-    def test_build_merges_configurations(self) -> None:
-        """Test that build properly merges multiple configurations."""
+    def test_configure_merges_configurations(self) -> None:
+        """Test that configure properly merges multiple configurations."""
         from taew.adapters.python.logging.for_logging.for_configuring_adapters import (
             Configure as ConfigureLogging,
         )
@@ -56,7 +56,7 @@ class TestBuildFunction(unittest.TestCase):
         config2 = ConfigureDateTime()
 
         # Build from configs
-        result = build(config1, config2)
+        result = configure(config1, config2)
 
         # Each config should contribute to the result
         ports1 = config1()
@@ -68,13 +68,13 @@ class TestBuildFunction(unittest.TestCase):
         for key in ports2.keys():
             self.assertIn(key, result)
 
-    def test_build_returns_ports_mapping(self) -> None:
-        """Test that build returns a valid PortsMapping type."""
+    def test_configure_returns_ports_mapping(self) -> None:
+        """Test that configure returns a valid PortsMapping type."""
         from taew.adapters.python.ram.for_obtaining_current_datetime.for_configuring_adapters import (
             Configure as ConfigureDateTime,
         )
 
-        result = build(ConfigureDateTime())
+        result = configure(ConfigureDateTime())
 
         # Should be a dict-like PortsMapping
         self.assertIsInstance(result, dict)
