@@ -452,6 +452,20 @@ class Bind(BindBase):
 
     def _find_adapter(self, interface: Type[T], ports: PortsMapping) -> T | Iterable[T]:
         port = self._get_port_by_interface(interface)
+
+        # Optimization: if requesting Bind itself and not in ports, return self
+        # The Bind adapter is manually instantiated at program start, so it doesn't
+        # need to be configured in the ports mapping
+        if port not in ports:
+            # Check if this is the for_binding_interfaces port
+            if port.__name__.endswith("for_binding_interfaces"):
+                return cast(T, self)
+            # Otherwise, port is required but missing
+            raise KeyError(
+                f"Port module '{port.__name__}' not found in ports mapping. "
+                f"Required for interface '{interface.__name__}'"
+            )
+
         port_configuration = ports[port]
         interface_name = interface.__name__
         # Handle iterable port configuration (multiple configurations)

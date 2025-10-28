@@ -5,9 +5,6 @@ from taew.ports.for_browsing_code_tree import Root, Package
 from taew.ports.for_configuring_adapters import Configure
 from taew.utils.configure import configure as configure_adapters
 
-from taew.adapters.launch_time.for_binding_interfaces.for_configuring_adapters import (
-    Configure as BindingInterfaces,
-)
 from taew.adapters.cli.for_starting_programs.for_configuring_adapters import (
     Configure as CLI,
 )
@@ -34,12 +31,15 @@ def configure(
     """Build a complete CLI application PortsMapping.
 
     Configures all infrastructure adapters needed for CLI operation:
-    - Interface binding for dynamic port resolution
     - CLI command execution
     - Output formatting (pprint)
     - Command-line argument parsing (argparse)
     - Configuration discovery
     - Type-variant mapping for custom serialization
+
+    Note: Interface binding (Bind adapter) does not need to be configured in the
+    ports mapping as it is manually instantiated at program start and returns itself
+    when requested dynamically
 
     Args:
         project_root: Root of the project code tree for navigation
@@ -74,8 +74,9 @@ def configure(
     # Build application ports mapping (empty dict if no adapters provided)
     app_ports: PortsMapping = configure_adapters(*adapters) if adapters else {}
 
+    # Note: BindingInterfaces is no longer needed in the ports mapping
+    # The Bind adapter now returns itself when requested, eliminating duplication
     return configure_adapters(
-        BindingInterfaces(_root=project_root),
         CLI(
             _root=cli_root_resolved,
             _ports_mapping=app_ports,
