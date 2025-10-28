@@ -1663,6 +1663,44 @@ class TestBind(TestLunchTimeAdapterBase):
         # This test is too complex and fragile with mocking. Skip it since static code checking is our main goal.
         pass
 
+    def test_bind_returns_self_when_not_in_ports(self) -> None:
+        """Test that Bind returns itself when for_binding_interfaces is not in ports mapping.
+
+        This optimization eliminates the need to configure BindingInterfaces in the
+        ports mapping, since Bind is manually instantiated at program start.
+        """
+        from taew.ports.for_binding_interfaces import Bind as BindInterface
+
+        # Create minimal root for testing
+        root = self._make_root({})
+        bind = self._make_bind(root)
+
+        # Empty ports mapping - for_binding_interfaces not configured
+        ports: PortsMapping = {}
+
+        # Should return self instead of raising KeyError
+        result = bind(BindInterface, ports)
+
+        # Verify it returns the same bind instance
+        self.assertIs(result, bind)
+
+    def test_missing_port_raises_key_error(self) -> None:
+        """Test that missing ports (other than for_binding_interfaces) raise KeyError."""
+        # Create minimal root for testing
+        root = self._make_root({})
+        bind = self._make_bind(root)
+
+        # Empty ports mapping
+        ports: PortsMapping = {}
+
+        # Requesting an interface from a missing port should raise KeyError
+        # Use InterfaceB which comes from interface_b_module (a real port module)
+        with self.assertRaises(KeyError) as ctx:
+            bind(InterfaceB, ports)
+
+        self.assertIn("not found in ports mapping", str(ctx.exception))
+        self.assertIn("InterfaceB", str(ctx.exception))
+
 
 if __name__ == "__main__":
     unittest.main()
