@@ -4,7 +4,7 @@ This module provides a function-based implementation of interface binding,
 replacing the previous class-based approach.
 """
 
-from typing import TypeVar, Type, cast, Any
+from typing import TypeVar, Type, cast
 
 from taew.domain.configuration import PortsMapping
 
@@ -40,22 +40,12 @@ def bind(interface: Type[T], adapters: PortsMapping) -> T:
     # Get port module for this interface
     port = get_port_by_interface(interface)
 
-    # Check if port is configured
-    if port not in adapters:
-        # Special case: if requesting Bind itself, return this function
-        # (wrapped to match protocol signature)
-        if port.__name__.endswith("for_binding_interfaces"):
-            # Create a wrapper function with proper types
-            def bind_wrapper(iface: Type[Any]) -> Any:
-                return bind(iface, adapters)
-
-            return cast(T, bind_wrapper)
-
-        # Otherwise, port is required but missing
+    # Check if port is configured (self-injection is handled in find_adapter_instance)
+    if port not in adapters and not port.__name__.endswith("for_binding_interfaces"):
         raise KeyError(
             f"Port module '{port.__name__}' not found in adapters mapping. "
             f"Required for interface '{interface.__name__}'"
         )
 
-    # Find and instantiate the adapter
+    # Find and instantiate the adapter (handles self-injection for Bind/CreateInstance)
     return cast(T, find_adapter_instance(interface, adapters, root))
