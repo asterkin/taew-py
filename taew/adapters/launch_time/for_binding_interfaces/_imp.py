@@ -108,11 +108,7 @@ def get_root(adapters: PortsMapping) -> Root:
 
                 Root = getattr(root_module, "Root")
                 # Instantiate with kwargs from configuration
-                # Map _root_path to root_path for inspect adapter compatibility
-                kwargs = dict(config.kwargs)
-                if "_root_path" in kwargs:
-                    kwargs["root_path"] = kwargs.pop("_root_path")
-                _root_cache[cache_key] = Root(**kwargs)
+                _root_cache[cache_key] = Root(**config.kwargs)
         else:
             raise ValueError(
                 f"Invalid for_browsing_code_tree configuration type: {type(config)}"
