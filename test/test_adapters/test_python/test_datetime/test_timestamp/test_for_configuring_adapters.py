@@ -7,6 +7,7 @@ from taew.ports.for_marshalling_objects import (
     FromMarshallable as FromMarshallableProtocol,
 )
 from taew.ports.for_configuring_adapters import Configure as ConfigureProtocol
+from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 
 
 class TestDatetimeTimestampConfigureIntegration(unittest.TestCase):
@@ -23,6 +24,14 @@ class TestDatetimeTimestampConfigureIntegration(unittest.TestCase):
         """Test full round-trip through dynamic adapter binding for naive datetimes."""
         configure: ConfigureProtocol = self._get_configure()
         ports = configure()
+
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import Configure as BrowseCodeTree
+
+        from pathlib import Path
+
+        browsing_config = BrowseCodeTree(_root_path=Path("./"))()
+
+        ports.update(browsing_config)
 
 
         # Configure for_browsing_code_tree
@@ -58,6 +67,14 @@ class TestDatetimeTimestampConfigureIntegration(unittest.TestCase):
         configure: ConfigureProtocol = self._get_configure()
         ports = configure()
 
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import Configure as BrowseCodeTree
+
+        from pathlib import Path
+
+        browsing_config = BrowseCodeTree(_root_path=Path("./"))()
+
+        ports.update(browsing_config)
+
 
         to_marshallable = bind(ToMarshallableProtocol, ports)
         from_marshallable = bind(FromMarshallableProtocol, ports)
@@ -83,6 +100,14 @@ class TestDatetimeTimestampConfigureIntegration(unittest.TestCase):
         configure: ConfigureProtocol = self._get_configure()
         ports = configure()
 
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import Configure as BrowseCodeTree
+
+        from pathlib import Path
+
+        browsing_config = BrowseCodeTree(_root_path=Path("./"))()
+
+        ports.update(browsing_config)
+
 
         to_marshallable = bind(ToMarshallableProtocol, ports)
 
@@ -97,6 +122,14 @@ class TestDatetimeTimestampConfigureIntegration(unittest.TestCase):
         """Test that FromMarshallable raises TypeError for non-numeric input."""
         configure: ConfigureProtocol = self._get_configure()
         ports = configure()
+
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import Configure as BrowseCodeTree
+
+        from pathlib import Path
+
+        browsing_config = BrowseCodeTree(_root_path=Path("./"))()
+
+        ports.update(browsing_config)
 
 
         from_marshallable = bind(FromMarshallableProtocol, ports)
@@ -114,6 +147,14 @@ class TestDatetimeTimestampConfigureIntegration(unittest.TestCase):
         configure: ConfigureProtocol = self._get_configure()
         ports = configure()
 
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import Configure as BrowseCodeTree
+
+        from pathlib import Path
+
+        browsing_config = BrowseCodeTree(_root_path=Path("./"))()
+
+        ports.update(browsing_config)
+
 
         from_marshallable = bind(FromMarshallableProtocol, ports)
 
@@ -128,6 +169,14 @@ class TestDatetimeTimestampConfigureIntegration(unittest.TestCase):
         configure = self._get_configure()
         ports = configure()
 
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import Configure as BrowseCodeTree
+
+        from pathlib import Path
+
+        browsing_config = BrowseCodeTree(_root_path=Path("./"))()
+
+        ports.update(browsing_config)
+
         # PortsMapping is a dict, so we just verify it's a dict with entries
         self.assertIsInstance(ports, dict)
         self.assertGreater(len(ports), 0)
@@ -136,6 +185,14 @@ class TestDatetimeTimestampConfigureIntegration(unittest.TestCase):
         """Test that microsecond precision is preserved in round-trip."""
         configure: ConfigureProtocol = self._get_configure()
         ports = configure()
+
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import Configure as BrowseCodeTree
+
+        from pathlib import Path
+
+        browsing_config = BrowseCodeTree(_root_path=Path("./"))()
+
+        ports.update(browsing_config)
 
 
         to_marshallable = bind(ToMarshallableProtocol, ports)

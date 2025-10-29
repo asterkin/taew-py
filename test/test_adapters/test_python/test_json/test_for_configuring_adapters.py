@@ -40,6 +40,14 @@ class TestJsonConfigureIntegration(unittest.TestCase):
         )
         ports = configure()
 
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import Configure as BrowseCodeTree
+
+        from pathlib import Path
+
+        browsing_config = BrowseCodeTree(_root_path=Path("./"))()
+
+        ports.update(browsing_config)
+
         from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 
         # Configure for_browsing_code_tree
@@ -82,6 +90,14 @@ class TestJsonConfigureIntegration(unittest.TestCase):
         )
         ports = configure()
 
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import Configure as BrowseCodeTree
+
+        from pathlib import Path
+
+        browsing_config = BrowseCodeTree(_root_path=Path("./"))()
+
+        ports.update(browsing_config)
+
         from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 
         dumps = bind(DumpsProtocol, ports)
@@ -105,6 +121,14 @@ class TestJsonConfigureIntegration(unittest.TestCase):
         variants: dict[type, str] = {date: "isoformat"}
         configure = self._get_configure_namedtuple(variants=variants)
         ports = configure()
+
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import Configure as BrowseCodeTree
+
+        from pathlib import Path
+
+        browsing_config = BrowseCodeTree(_root_path=Path("./"))()
+
+        ports.update(browsing_config)
 
         self.assertIsInstance(ports, dict)
         self.assertGreater(len(ports), 0)

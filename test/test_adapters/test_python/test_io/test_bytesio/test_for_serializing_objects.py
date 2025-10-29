@@ -9,6 +9,7 @@ from taew.ports.for_serializing_objects import (
     Deserialize as DeserializeProtocol,
 )
 from taew.ports.for_configuring_adapters import Configure as ConfigureProtocol
+from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 
 
 class Person(NamedTuple):

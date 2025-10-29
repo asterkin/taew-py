@@ -9,6 +9,7 @@ from taew.ports.for_streaming_objects import (
     Read as ReadProtocol,
 )
 from taew.ports.for_configuring_adapters import Configure as ConfigureProtocol
+from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 
 
 class TestDatetimeConfigureIntegration(unittest.TestCase):
@@ -20,6 +21,7 @@ class TestDatetimeConfigureIntegration(unittest.TestCase):
         return Configure()
 
     def _bind(self, cfg: ConfigureProtocol) -> tuple[WriteProtocol, ReadProtocol]:
+        ports = cfg()
         # Configure for_browsing_code_tree
         from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import Configure as BrowseCodeTree
         browsing_config = BrowseCodeTree(_root_path=Path("./"))()

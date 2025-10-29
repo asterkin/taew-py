@@ -9,6 +9,7 @@ from taew.ports import (
     for_serializing_objects as for_serializing_port,
 )
 from taew.ports.for_configuring_adapters import Configure as ConfigureProtocol
+from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 from taew.ports.for_streaming_objects import (
     Write as WriteProtocol,
     Read as ReadProtocol,
@@ -60,6 +61,7 @@ class TestIntStreamConfigureVariable(unittest.TestCase):
         self.assertEqual(ser_pc_dict.kwargs, {"_byte_order": "big", "_signed": True})
 
     def _bind(self, cfg: ConfigureProtocol) -> tuple[WriteProtocol, ReadProtocol]:
+        ports = cfg()
         # Configure for_browsing_code_tree
         from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import Configure as BrowseCodeTree
         browsing_config = BrowseCodeTree(_root_path=Path("./"))()

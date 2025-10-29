@@ -20,6 +20,7 @@ class TestDecimalStreamingConfigureIntegration(unittest.TestCase):
         return Configure()
 
     def _bind(self, cfg: ConfigureProtocol) -> tuple[WriteProtocol, ReadProtocol]:
+        ports = cfg()
         # Configure for_browsing_code_tree
 
         from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import Configure as BrowseCodeTree
