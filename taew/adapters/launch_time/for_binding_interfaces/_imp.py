@@ -37,24 +37,21 @@ from taew.ports.for_browsing_code_tree import (
 )
 
 
-# Global singleton Root instance (keyed by config id for cache reuse across calls)
+# Global singleton Root instance
 _root_instance: Root | None = None
-_root_config_id: int | None = None
 
 
 def clear_root_cache() -> None:
     """Clear the root cache. Primarily for testing purposes."""
-    global _root_instance, _root_config_id
+    global _root_instance
     _root_instance = None
-    _root_config_id = None
 
 
 def get_root(adapters: PortsMapping) -> Root:
     """Get or create Root instance from adapters configuration.
 
-    Uses a global singleton Root instance. If not yet created, or if the
-    configuration has changed, looks for for_browsing_code_tree port
-    configuration and instantiates Root.
+    Uses a global singleton Root instance. Once created, the same instance
+    is returned for all subsequent calls.
 
     Args:
         adapters: Configuration mapping containing browsing_code_tree config
@@ -66,29 +63,28 @@ def get_root(adapters: PortsMapping) -> Root:
         KeyError: If for_browsing_code_tree is not configured
         ValueError: If Root cannot be created from configuration
     """
-    global _root_instance, _root_config_id
+    global _root_instance
 
-    # Find the for_browsing_code_tree port
+    # Return singleton if already created
+    if _root_instance is not None:
+        return _root_instance
+
+    # Find the for_browsing_code_tree port in adapters mapping
     browsing_port = None
-    for port_module in sys.modules.values():
-        if hasattr(port_module, "__name__") and port_module.__name__.endswith(
+    for port in adapters.keys():
+        if hasattr(port, "__name__") and port.__name__.endswith(
             "for_browsing_code_tree"
         ):
-            browsing_port = port_module
+            browsing_port = port
             break
 
-    if browsing_port is None or browsing_port not in adapters:
+    if browsing_port is None:
         raise KeyError(
             "for_browsing_code_tree port must be configured in adapters mapping"
         )
 
     # Get configuration
     config = adapters[browsing_port]
-    config_id = id(config)
-
-    # Return cached instance if configuration hasn't changed
-    if _root_instance is not None and _root_config_id == config_id:
-        return _root_instance
 
     # Create Root instance from configuration
     if isinstance(config, str):
@@ -100,7 +96,6 @@ def get_root(adapters: PortsMapping) -> Root:
         # Check if Root is pre-instantiated in kwargs
         if "_root" in config.kwargs:
             _root_instance = config.kwargs["_root"]
-            _root_config_id = config_id
         else:
             # Instantiate Root from the adapter configuration
             # The adapter path already includes "taew." prefix
@@ -119,7 +114,6 @@ def get_root(adapters: PortsMapping) -> Root:
             RootClass = getattr(root_module, "Root")
             # Instantiate with kwargs from configuration
             _root_instance = RootClass(**config.kwargs)
-            _root_config_id = config_id
     else:
         raise ValueError(
             f"Invalid for_browsing_code_tree configuration type: {type(config)}"

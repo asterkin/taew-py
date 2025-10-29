@@ -9,6 +9,14 @@ from taew.ports.for_logging import Logger as LoggerProtocol
 
 
 class TestLoggingConfigureIntegration(unittest.TestCase):
+    def tearDown(self) -> None:
+        """Clear Root cache after each test for isolation."""
+        from taew.adapters.launch_time.for_binding_interfaces._imp import (
+            clear_root_cache,
+        )
+
+        clear_root_cache()
+
     """Integration tests for logging adapter configuration."""
 
     def _get_configure(self, name: str, level: LogLevel = INFO) -> ConfigureProtocol:

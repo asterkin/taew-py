@@ -27,6 +27,14 @@ class DateTimeRecord(NamedTuple):
 
 
 class TestNamedTupleConfigureIntegration(unittest.TestCase):
+    def tearDown(self) -> None:
+        """Clear Root cache after each test for isolation."""
+        from taew.adapters.launch_time.for_binding_interfaces._imp import (
+            clear_root_cache,
+        )
+
+        clear_root_cache()
+
     """Integration tests for named tuple marshalling adapter with dynamic binding."""
 
     def _get_configure_simple(self) -> ConfigureProtocol:

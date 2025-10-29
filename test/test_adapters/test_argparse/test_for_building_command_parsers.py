@@ -105,6 +105,11 @@ class TestBuilder(unittest.TestCase):
 
     def tearDown(self) -> None:
         sys.argv = self._sys_args
+        from taew.adapters.launch_time.for_binding_interfaces._imp import (
+            clear_root_cache,
+        )
+
+        clear_root_cache()
 
     def test_help_output(self) -> None:
         args = ["myapp", "--help"]

@@ -10,6 +10,14 @@ from taew.ports.for_configuring_adapters import Configure as ConfigureProtocol
 
 
 class TestDateIsoformatConfigureIntegration(unittest.TestCase):
+    def tearDown(self) -> None:
+        """Clear Root cache after each test for isolation."""
+        from taew.adapters.launch_time.for_binding_interfaces._imp import (
+            clear_root_cache,
+        )
+
+        clear_root_cache()
+
     """Integration tests for date isoformat marshalling adapter with dynamic binding."""
 
     def _get_configure(self, format_str: str | None = None) -> ConfigureProtocol:
