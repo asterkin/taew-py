@@ -139,6 +139,41 @@ def _get_cached_port_module(module_name: str) -> Any:
     return sys.modules[module_name]
 
 
+def _return_for_binding_interfaces_ref(interface: Type[Any]) -> Any:
+    """Return a reference to bind or create_instance for self-injection.
+
+    When an adapter needs to inject Bind or CreateInstance, this returns
+    the raw function itself. The caller will provide their own adapters mapping
+    when calling it (e.g., CLI Main passes self._ports_mapping).
+
+    Args:
+        interface: The Bind or CreateInstance interface type
+
+    Returns:
+        The bind or create_instance function itself
+
+    Raises:
+        ValueError: If the interface is neither Bind nor CreateInstance
+    """
+    interface_name = interface.__name__
+
+    if interface_name == "Bind":
+        # Lazy import to avoid circular dependency
+        from .bind import bind
+
+        return bind
+    elif interface_name == "CreateInstance":
+        # Lazy import to avoid circular dependency
+        from .create_instance import create_instance
+
+        return create_instance
+    else:
+        raise ValueError(
+            f"Unknown binding interface: {interface_name}. "
+            f"Expected 'Bind' or 'CreateInstance'."
+        )
+
+
 def find_adapter_instance(
     interface: Type[Any],
     adapters: PortsMapping,
@@ -161,6 +196,11 @@ def find_adapter_instance(
         ValueError: If adapter cannot be found
     """
     port = get_port_by_interface(interface)
+
+    # Special case: self-injection for Bind and CreateInstance interfaces
+    if port.__name__.endswith("for_binding_interfaces"):
+        return _return_for_binding_interfaces_ref(interface)
+
     port_configuration = adapters[port]
     interface_name = interface.__name__
 
