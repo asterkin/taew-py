@@ -26,6 +26,21 @@ class TestDateIsoformatConfigureIntegration(unittest.TestCase):
 
         from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 
+        # Configure for_browsing_code_tree
+
+
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import Configure as BrowseCodeTree
+
+
+        browsing_config = BrowseCodeTree(_root_path=Path("./"))()
+
+
+        ports.update(browsing_config)
+
+
+        
+
+
         to_marshallable = bind(ToMarshallableProtocol, ports)
         from_marshallable = bind(FromMarshallableProtocol, ports)
 
