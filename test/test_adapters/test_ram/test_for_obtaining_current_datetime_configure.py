@@ -5,6 +5,7 @@ from pathlib import Path
 
 from taew.ports.for_configuring_adapters import Configure as ConfigureProtocol
 from taew.ports.for_obtaining_current_datetime import Now as NowProtocol
+from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 
 
 class TestRamCurrentDateTimeConfigureIntegration(unittest.TestCase):
@@ -18,14 +19,16 @@ class TestRamCurrentDateTimeConfigureIntegration(unittest.TestCase):
         return Configure()
 
     def _bind(self, cfg: ConfigureProtocol) -> NowProtocol:
-        from taew.adapters.python.inspect.for_browsing_code_tree.root import (
-            Root as InspectRoot,
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import (
+            Configure as BrowseCodeTree,
         )
-        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
+        from taew.utils.configure import configure as configure_adapters
 
         ports = cfg()
-        root = InspectRoot(Path("."))
-        bind = Bind(root)
+        # Add for_browsing_code_tree configuration
+        ports_with_browsing = configure_adapters(BrowseCodeTree(_root_path=Path("./")))
+        ports.update(ports_with_browsing)
+
         return bind(NowProtocol, ports)
 
     def test_configure_returns_ports_mapping(self) -> None:

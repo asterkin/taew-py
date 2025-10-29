@@ -7,6 +7,7 @@ from taew.ports.for_streaming_objects import (
     Read as ReadProtocol,
 )
 from taew.ports.for_configuring_adapters import Configure as ConfigureProtocol
+from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 
 
 class TestUnionStreaming(unittest.TestCase):
@@ -21,13 +22,15 @@ class TestUnionStreaming(unittest.TestCase):
         configure = self._get_configure()
         ports = configure()
 
-        from taew.adapters.python.inspect.for_browsing_code_tree.root import (
-            Root as InspectRoot,
-        )
-        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
+        # Configure for_browsing_code_tree
 
-        root = InspectRoot(Path("."))
-        bind = Bind(root)
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import (
+            Configure as BrowseCodeTree,
+        )
+
+        browsing_config = BrowseCodeTree(_root_path=Path("./"))()
+
+        ports.update(browsing_config)
 
         write = bind(WriteProtocol, ports)
         read = bind(ReadProtocol, ports)

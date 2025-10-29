@@ -8,6 +8,7 @@ from taew.ports.for_streaming_objects import (
     Read as ReadProtocol,
 )
 from taew.ports.for_configuring_adapters import Configure as ConfigureProtocol
+from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 
 
 class TestDecimalStreamingConfigureIntegration(unittest.TestCase):
@@ -19,14 +20,17 @@ class TestDecimalStreamingConfigureIntegration(unittest.TestCase):
         return Configure()
 
     def _bind(self, cfg: ConfigureProtocol) -> tuple[WriteProtocol, ReadProtocol]:
-        from taew.adapters.python.inspect.for_browsing_code_tree.root import (
-            Root as InspectRoot,
-        )
-        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
-
         ports = cfg()
-        root = InspectRoot(Path("."))
-        bind = Bind(root)
+        # Configure for_browsing_code_tree
+
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import (
+            Configure as BrowseCodeTree,
+        )
+
+        browsing_config = BrowseCodeTree(_root_path=Path("./"))()
+
+        ports.update(browsing_config)
+
         write = bind(WriteProtocol, ports)
         read = bind(ReadProtocol, ports)
         return write, read

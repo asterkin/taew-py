@@ -51,14 +51,24 @@ class TestNamedTupleConfigureIntegration(unittest.TestCase):
         """Test round-trip with simple types (str, int, float)."""
         configure: ConfigureProtocol = self._get_configure_simple()
         ports = configure()
-
-        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
-        from taew.adapters.python.inspect.for_browsing_code_tree.root import (
-            Root as InspectRoot,
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import (
+            Configure as BrowseCodeTree,
         )
 
-        root = InspectRoot(Path("."))
-        bind = Bind(root)
+        browsing_config = BrowseCodeTree(_root_path=Path("./"))()
+        ports.update(browsing_config)
+
+        from taew.adapters.launch_time.for_binding_interfaces.bind import bind
+
+        # Configure for_browsing_code_tree
+
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import (
+            Configure as BrowseCodeTree,
+        )
+
+        browsing_config = BrowseCodeTree(_root_path=Path("./"))()
+
+        ports.update(browsing_config)
 
         to_marshallable = bind(ToMarshallableProtocol, ports)
         from_marshallable = bind(FromMarshallableProtocol, ports)
@@ -84,14 +94,14 @@ class TestNamedTupleConfigureIntegration(unittest.TestCase):
         }
         configure: ConfigureProtocol = self._get_configure_datetime(variants)
         ports = configure()
-
-        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
-        from taew.adapters.python.inspect.for_browsing_code_tree.root import (
-            Root as InspectRoot,
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import (
+            Configure as BrowseCodeTree,
         )
 
-        root = InspectRoot(Path("."))
-        bind = Bind(root)
+        browsing_config = BrowseCodeTree(_root_path=Path("./"))()
+        ports.update(browsing_config)
+
+        from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 
         to_marshallable = bind(ToMarshallableProtocol, ports)
         from_marshallable = bind(FromMarshallableProtocol, ports)
@@ -130,14 +140,14 @@ class TestNamedTupleConfigureIntegration(unittest.TestCase):
         """Test that ToMarshallable raises TypeError for non-namedtuple."""
         configure: ConfigureProtocol = self._get_configure_simple()
         ports = configure()
-
-        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
-        from taew.adapters.python.inspect.for_browsing_code_tree.root import (
-            Root as InspectRoot,
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import (
+            Configure as BrowseCodeTree,
         )
 
-        root = InspectRoot(Path("."))
-        bind = Bind(root)
+        browsing_config = BrowseCodeTree(_root_path=Path("./"))()
+        ports.update(browsing_config)
+
+        from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 
         to_marshallable = bind(ToMarshallableProtocol, ports)
 
@@ -150,14 +160,14 @@ class TestNamedTupleConfigureIntegration(unittest.TestCase):
         """Test that FromMarshallable raises TypeError for non-dict."""
         configure: ConfigureProtocol = self._get_configure_simple()
         ports = configure()
-
-        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
-        from taew.adapters.python.inspect.for_browsing_code_tree.root import (
-            Root as InspectRoot,
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import (
+            Configure as BrowseCodeTree,
         )
 
-        root = InspectRoot(Path("."))
-        bind = Bind(root)
+        browsing_config = BrowseCodeTree(_root_path=Path("./"))()
+        ports.update(browsing_config)
+
+        from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 
         from_marshallable = bind(FromMarshallableProtocol, ports)
 
@@ -170,14 +180,14 @@ class TestNamedTupleConfigureIntegration(unittest.TestCase):
         """Test that FromMarshallable raises ValueError for field mismatch."""
         configure: ConfigureProtocol = self._get_configure_simple()
         ports = configure()
-
-        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
-        from taew.adapters.python.inspect.for_browsing_code_tree.root import (
-            Root as InspectRoot,
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import (
+            Configure as BrowseCodeTree,
         )
 
-        root = InspectRoot(Path("."))
-        bind = Bind(root)
+        browsing_config = BrowseCodeTree(_root_path=Path("./"))()
+        ports.update(browsing_config)
+
+        from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 
         from_marshallable = bind(FromMarshallableProtocol, ports)
 
@@ -193,6 +203,12 @@ class TestNamedTupleConfigureIntegration(unittest.TestCase):
         """Test that Configure returns a valid PortsMapping."""
         configure = self._get_configure_simple()
         ports = configure()
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import (
+            Configure as BrowseCodeTree,
+        )
+
+        browsing_config = BrowseCodeTree(_root_path=Path("./"))()
+        ports.update(browsing_config)
 
         self.assertIsInstance(ports, dict)
         self.assertGreater(len(ports), 0)
@@ -201,14 +217,14 @@ class TestNamedTupleConfigureIntegration(unittest.TestCase):
         """Test that field order is preserved in marshalling."""
         configure: ConfigureProtocol = self._get_configure_simple()
         ports = configure()
-
-        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
-        from taew.adapters.python.inspect.for_browsing_code_tree.root import (
-            Root as InspectRoot,
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import (
+            Configure as BrowseCodeTree,
         )
 
-        root = InspectRoot(Path("."))
-        bind = Bind(root)
+        browsing_config = BrowseCodeTree(_root_path=Path("./"))()
+        ports.update(browsing_config)
+
+        from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 
         to_marshallable = bind(ToMarshallableProtocol, ports)
 

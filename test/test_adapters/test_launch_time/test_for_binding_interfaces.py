@@ -1,4 +1,5 @@
 import unittest
+from typing import Protocol, cast
 from taew.ports.for_browsing_code_tree import Root as RootProtocol
 from taew.ports.for_binding_interfaces import Bind as BindProtocol
 from ._common import TestLunchTimeAdapterBase, Workflow, FunctionWorkflow, Adapter
@@ -11,7 +12,6 @@ from taew.domain.argument import (
     VAR_KEYWORD,
 )
 from taew.domain.configuration import PortConfigurationDict, PortsMapping
-from typing import Protocol
 from taew.ports.for_browsing_code_tree import (
     Argument as ArgumentProtocol,
     Class as ClassProtocol,
@@ -28,9 +28,43 @@ availability under a separate port module without using sys.modules directly."""
 
 class TestBind(TestLunchTimeAdapterBase):
     def _make_bind(self, root: RootProtocol) -> BindProtocol:
-        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
+        """Create a bind-compatible callable for tests.
 
-        return Bind(root)
+        The new bind is a function, not a class. This helper creates
+        a callable wrapper that mimics the old Bind protocol interface.
+        """
+        from taew.adapters.launch_time.for_binding_interfaces.bind import bind
+        from taew.adapters.launch_time.for_binding_interfaces._imp import (
+            clear_root_cache,
+        )
+        from taew.domain.configuration import PortConfigurationDict
+        import sys
+
+        # Clear the root cache to avoid test interactions
+        clear_root_cache()
+
+        # Find the for_browsing_code_tree port module
+        browsing_port = None
+        for port_module in sys.modules.values():
+            if hasattr(port_module, "__name__") and port_module.__name__.endswith(
+                "for_browsing_code_tree"
+            ):
+                browsing_port = port_module
+                break
+
+        # Create a wrapper that injects root into every call
+        class BindWrapper:
+            def __call__(self, interface: type, ports: PortsMapping) -> object:
+                # Inject root into ports mapping for each call
+                ports_with_root = ports.copy()
+                if browsing_port:
+                    ports_with_root[browsing_port] = PortConfigurationDict(
+                        adapter="adapters.python.ram", kwargs={"_root": root}, ports={}
+                    )
+                return cast(object, bind(interface, ports_with_root))
+
+        wrapper: BindProtocol = BindWrapper()  # type: ignore[assignment]
+        return wrapper
 
     def _make_union_interface_argument(self) -> tuple[str, ArgumentProtocol]:
         """Create a constructor argument with tuple[InterfaceA|InterfaceB, type] spec."""
@@ -1664,10 +1698,10 @@ class TestBind(TestLunchTimeAdapterBase):
         pass
 
     def test_bind_returns_self_when_not_in_ports(self) -> None:
-        """Test that Bind returns itself when for_binding_interfaces is not in ports mapping.
+        """Test that Bind returns a bind function when for_binding_interfaces is not in ports mapping.
 
         This optimization eliminates the need to configure BindingInterfaces in the
-        ports mapping, since Bind is manually instantiated at program start.
+        ports mapping, since bind is a function that can return itself.
         """
         from taew.ports.for_binding_interfaces import Bind as BindInterface
 
@@ -1678,11 +1712,11 @@ class TestBind(TestLunchTimeAdapterBase):
         # Empty ports mapping - for_binding_interfaces not configured
         ports: PortsMapping = {}
 
-        # Should return self instead of raising KeyError
+        # Should return a bind function instead of raising KeyError
         result = bind(BindInterface, ports)
 
-        # Verify it returns the same bind instance
-        self.assertIs(result, bind)
+        # Verify it's callable (a function)
+        self.assertTrue(callable(result))
 
     def test_missing_port_raises_key_error(self) -> None:
         """Test that missing ports (other than for_binding_interfaces) raise KeyError."""
@@ -1698,7 +1732,8 @@ class TestBind(TestLunchTimeAdapterBase):
         with self.assertRaises(KeyError) as ctx:
             bind(InterfaceB, ports)
 
-        self.assertIn("not found in ports mapping", str(ctx.exception))
+        # New error message says "adapters mapping" instead of "ports mapping"
+        self.assertIn("not found in adapters mapping", str(ctx.exception))
         self.assertIn("InterfaceB", str(ctx.exception))
 
 

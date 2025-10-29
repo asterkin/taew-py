@@ -40,13 +40,25 @@ class TestJsonConfigureIntegration(unittest.TestCase):
         )
         ports = configure()
 
-        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
-        from taew.adapters.python.inspect.for_browsing_code_tree.root import (
-            Root as InspectRoot,
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import (
+            Configure as BrowseCodeTree,
         )
 
-        root = InspectRoot(Path("."))
-        bind = Bind(root)
+        browsing_config = BrowseCodeTree(_root_path=Path("./"))()
+
+        ports.update(browsing_config)
+
+        from taew.adapters.launch_time.for_binding_interfaces.bind import bind
+
+        # Configure for_browsing_code_tree
+
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import (
+            Configure as BrowseCodeTree,
+        )
+
+        browsing_config = BrowseCodeTree(_root_path=Path("./"))()
+
+        ports.update(browsing_config)
 
         dumps = bind(DumpsProtocol, ports)
         loads = bind(LoadsProtocol, ports)
@@ -73,13 +85,15 @@ class TestJsonConfigureIntegration(unittest.TestCase):
         )
         ports = configure()
 
-        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
-        from taew.adapters.python.inspect.for_browsing_code_tree.root import (
-            Root as InspectRoot,
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import (
+            Configure as BrowseCodeTree,
         )
 
-        root = InspectRoot(Path("."))
-        bind = Bind(root)
+        browsing_config = BrowseCodeTree(_root_path=Path("./"))()
+
+        ports.update(browsing_config)
+
+        from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 
         dumps = bind(DumpsProtocol, ports)
 
@@ -102,6 +116,14 @@ class TestJsonConfigureIntegration(unittest.TestCase):
         variants: dict[type, str] = {date: "isoformat"}
         configure = self._get_configure_namedtuple(variants=variants)
         ports = configure()
+
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import (
+            Configure as BrowseCodeTree,
+        )
+
+        browsing_config = BrowseCodeTree(_root_path=Path("./"))()
+
+        ports.update(browsing_config)
 
         self.assertIsInstance(ports, dict)
         self.assertGreater(len(ports), 0)
