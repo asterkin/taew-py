@@ -17,6 +17,14 @@ from taew.ports.for_streaming_objects import (
 
 
 class TestIntStreamConfigureVariable(unittest.TestCase):
+    def tearDown(self) -> None:
+        """Clear Root cache after each test for isolation."""
+        from taew.adapters.launch_time.for_binding_interfaces._imp import (
+            clear_root_cache,
+        )
+
+        clear_root_cache()
+
     def _get_configure(self) -> ConfigureProtocol:
         from taew.adapters.python.int.for_streaming_objects.for_configuring_adapters import (
             Configure,

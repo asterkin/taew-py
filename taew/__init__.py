@@ -5,4 +5,4 @@ This library supports building evolvable applications using the Ports & Adapters
 (Hexagonal Architecture) pattern, enabling development without premature technology lock-in.
 """
 
-__version__ = "2.13.3"
+__version__ = "2.13.4"

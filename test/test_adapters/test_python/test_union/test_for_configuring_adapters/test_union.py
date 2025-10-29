@@ -11,6 +11,14 @@ from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 
 
 class TestUnionStreaming(unittest.TestCase):
+    def tearDown(self) -> None:
+        """Clear Root cache after each test for isolation."""
+        from taew.adapters.launch_time.for_binding_interfaces._imp import (
+            clear_root_cache,
+        )
+
+        clear_root_cache()
+
     def _get_configure(self) -> ConfigureProtocol:
         from taew.adapters.python.union.for_streaming_objects.for_configuring_adapters import (
             Configure,

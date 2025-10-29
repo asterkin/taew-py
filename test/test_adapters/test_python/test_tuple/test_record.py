@@ -12,6 +12,14 @@ from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 
 
 class TestTupleRecordStreaming(unittest.TestCase):
+    def tearDown(self) -> None:
+        """Clear Root cache after each test for isolation."""
+        from taew.adapters.launch_time.for_binding_interfaces._imp import (
+            clear_root_cache,
+        )
+
+        clear_root_cache()
+
     """Test heterogeneous tuple streaming - tuple[T1, T2, T3]"""
 
     def _get_configure(self) -> ConfigureProtocol:

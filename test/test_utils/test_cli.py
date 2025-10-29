@@ -10,6 +10,14 @@ from taew.adapters.python.ram.for_browsing_code_tree.package import Package
 class TestCLIConfigureFunction(unittest.TestCase):
     """Test the configure function for CLI application setup."""
 
+    def tearDown(self) -> None:
+        """Clear Root cache after each test for isolation."""
+        from taew.adapters.launch_time.for_binding_interfaces._imp import (
+            clear_root_cache,
+        )
+
+        clear_root_cache()
+
     def setUp(self) -> None:
         """Set up test fixtures."""
         # Create a mock CLI package for testing

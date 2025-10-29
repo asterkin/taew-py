@@ -19,6 +19,14 @@ from taew.ports.for_stringizing_objects import Dumps as DumpsProtocol
 
 
 class TestMain(unittest.TestCase):
+    def tearDown(self) -> None:
+        """Clear Root cache after each test for isolation."""
+        from taew.adapters.launch_time.for_binding_interfaces._imp import (
+            clear_root_cache,
+        )
+
+        clear_root_cache()
+
     def setUp(self) -> None:
         self._cmd_args = ["myapp", "dummy", "123"]
         self._ports = PortsMapping({})
