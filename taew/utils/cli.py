@@ -67,14 +67,23 @@ def configure(
     # Build application ports mapping (empty dict if no adapters provided)
     app_ports: PortsMapping = configure_adapters(*adapters) if adapters else {}
 
-    return configure_adapters(
+    # Build infrastructure ports
+    infrastructure_ports = configure_adapters(
         BrowseCodeTree(_root_path=root_path),
-        CLI(
-            _ports_mapping=app_ports,
-            _cli_package=cli_package,
-        ),
         PPrint(),
         Argparse(),
         FindConfigurations(),
         BuildConfigPortsMapping(_variants=variants),
     )
+
+    # Configure CLI with application ports
+    # Note: CLI uses application ports only; Root is accessed via singleton
+    cli_ports = configure_adapters(
+        CLI(
+            _ports_mapping=app_ports,
+            _cli_package=cli_package,
+        ),
+    )
+
+    # Return complete mapping: infrastructure + application + CLI
+    return {**infrastructure_ports, **app_ports, **cli_ports}
