@@ -33,7 +33,7 @@ class TestCLIConfigureFunction(unittest.TestCase):
 
     def test_configure_with_no_adapters(self) -> None:
         """Test configure with no application adapters."""
-        result = configure(self.project_root)
+        result = configure()
 
         self.assertIsInstance(result, dict)
         # Should have infrastructure ports configured
@@ -45,7 +45,7 @@ class TestCLIConfigureFunction(unittest.TestCase):
             Configure as ConfigureDateTime,
         )
 
-        result = configure(self.project_root, ConfigureDateTime())
+        result = configure(ConfigureDateTime())
 
         self.assertIsInstance(result, dict)
         self.assertGreater(len(result), 0)
@@ -61,7 +61,6 @@ class TestCLIConfigureFunction(unittest.TestCase):
         from taew.domain.logging import INFO
 
         result = configure(
-            self.project_root,
             ConfigureLogging(_name="TestApp", _level=INFO),
             ConfigureDateTime(),
         )
@@ -74,16 +73,15 @@ class TestCLIConfigureFunction(unittest.TestCase):
         from datetime import date
 
         result = configure(
-            self.project_root,
             variants={date: {"_variant": "isoformat", "_format": "%m/%y"}},
         )
 
         self.assertIsInstance(result, dict)
         self.assertGreater(len(result), 0)
 
-    def test_configure_with_custom_cli_root(self) -> None:
-        """Test configure with custom cli_root."""
-        result = configure(self.project_root, cli_root=self.cli_package)
+    def test_configure_with_custom_cli_package(self) -> None:
+        """Test configure with custom cli_package."""
+        result = configure(cli_package="custom.cli")
 
         self.assertIsInstance(result, dict)
         self.assertGreater(len(result), 0)
@@ -94,11 +92,12 @@ class TestCLIConfigureFunction(unittest.TestCase):
             Configure as ConfigureDateTime,
         )
         from datetime import date
+        from pathlib import Path
 
         result = configure(
-            self.project_root,
             ConfigureDateTime(),
-            cli_root=self.cli_package,
+            root_path=Path("./"),
+            cli_package="adapters.cli",
             variants={date: {"_variant": "isoformat"}},
         )
 
@@ -107,7 +106,7 @@ class TestCLIConfigureFunction(unittest.TestCase):
 
     def test_configure_returns_ports_mapping(self) -> None:
         """Test that configure returns a valid PortsMapping type."""
-        result = configure(self.project_root)
+        result = configure()
 
         # Should be a dict-like PortsMapping
         self.assertIsInstance(result, dict)
@@ -117,15 +116,15 @@ class TestCLIConfigureFunction(unittest.TestCase):
 
     def test_configure_includes_infrastructure_ports(self) -> None:
         """Test that configure includes expected infrastructure ports."""
-        result = configure(self.project_root)
+        result = configure()
 
         # Should have multiple infrastructure ports configured
-        # (BindingInterfaces, CLI, PPrint, Argparse, FindConfigurations, BuildConfigPortsMapping)
-        self.assertGreaterEqual(len(result), 5)
+        # (BrowseCodeTree, CLI, PPrint, Argparse, FindConfigurations, BuildConfigPortsMapping)
+        self.assertGreaterEqual(len(result), 6)
 
     def test_configure_with_empty_variants(self) -> None:
         """Test configure with explicitly empty variants dict."""
-        result = configure(self.project_root, variants={})
+        result = configure(variants={})
 
         self.assertIsInstance(result, dict)
         self.assertGreater(len(result), 0)

@@ -2,7 +2,7 @@ from typing import Any
 from dataclasses import dataclass
 from taew.utils.strings import snake_to_pascal
 from collections.abc import Sequence, Callable
-from taew.ports.for_binding_interfaces import Bind
+from taew.ports.for_binding_interfaces import CreateInstance
 from taew.ports.for_stringizing_objects import Dumps
 from taew.ports.for_building_command_parsers import Build, Builder
 from taew.ports.for_browsing_code_tree import (
@@ -25,7 +25,7 @@ ResultType = tuple[InstanceType | None, ItemType]
 
 @dataclass(eq=False, frozen=True)
 class Main(MainBase):
-    _binder: Bind
+    _create_instance: CreateInstance
     _build: Build
     _dumps: Dumps
 
@@ -58,9 +58,9 @@ class Main(MainBase):
         Create an instance of the class.
         """
         try:
-            instance = self._binder.create_instance(item, self._ports_mapping)
+            instance = self._create_instance(item, self._ports_mapping)
             if callable(instance):
-                return instance
+                return instance  # type: ignore
             builder.error(
                 f"Class {cmd_arg_snake}.{cmd_arg_pascal} instance is not callable."
             )
@@ -175,7 +175,7 @@ class Main(MainBase):
         return None, item
 
     def _find_command(self, builder: Builder) -> ResultType:
-        current: Package | Module = self._root
+        current: Package | Module = self._cli_root
         for cmd_arg in builder:
             cmd_arg_snake = cmd_arg.replace("-", "_")
             cmd_arg_pascal = snake_to_pascal(cmd_arg_snake)
@@ -241,7 +241,7 @@ class Main(MainBase):
             builder.add_item_description(name_kebab, description)
 
     def __call__(self, cmd_args: Sequence[str]) -> None:
-        builder = self._build(self._root.description, self._root.version, cmd_args)
+        builder = self._build(self._cli_root.description, self._cli_root.version, cmd_args)
         command, current = self._find_command(builder)
         if is_package(current) or is_module(current):
             self._add_usage(current, builder)

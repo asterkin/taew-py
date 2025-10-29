@@ -39,13 +39,6 @@ class TestBytesIOSerialization(unittest.TestCase):
         configurator = self._get_configurator(named_tuple_type)
         ports = configurator()
 
-        from taew.adapters.python.inspect.for_browsing_code_tree.root import (
-            Root as InspectRoot,
-        )
-        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
-
-        root = InspectRoot(Path("."))
-        bind = Bind(root)
 
         serialize = bind(SerializeProtocol, ports)
         deserialize = bind(DeserializeProtocol, ports)

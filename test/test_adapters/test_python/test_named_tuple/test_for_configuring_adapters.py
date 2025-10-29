@@ -52,13 +52,7 @@ class TestNamedTupleConfigureIntegration(unittest.TestCase):
         configure: ConfigureProtocol = self._get_configure_simple()
         ports = configure()
 
-        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
-        from taew.adapters.python.inspect.for_browsing_code_tree.root import (
-            Root as InspectRoot,
-        )
-
-        root = InspectRoot(Path("."))
-        bind = Bind(root)
+        from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 
         to_marshallable = bind(ToMarshallableProtocol, ports)
         from_marshallable = bind(FromMarshallableProtocol, ports)
@@ -85,13 +79,7 @@ class TestNamedTupleConfigureIntegration(unittest.TestCase):
         configure: ConfigureProtocol = self._get_configure_datetime(variants)
         ports = configure()
 
-        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
-        from taew.adapters.python.inspect.for_browsing_code_tree.root import (
-            Root as InspectRoot,
-        )
-
-        root = InspectRoot(Path("."))
-        bind = Bind(root)
+        from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 
         to_marshallable = bind(ToMarshallableProtocol, ports)
         from_marshallable = bind(FromMarshallableProtocol, ports)
@@ -131,13 +119,7 @@ class TestNamedTupleConfigureIntegration(unittest.TestCase):
         configure: ConfigureProtocol = self._get_configure_simple()
         ports = configure()
 
-        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
-        from taew.adapters.python.inspect.for_browsing_code_tree.root import (
-            Root as InspectRoot,
-        )
-
-        root = InspectRoot(Path("."))
-        bind = Bind(root)
+        from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 
         to_marshallable = bind(ToMarshallableProtocol, ports)
 
@@ -151,13 +133,7 @@ class TestNamedTupleConfigureIntegration(unittest.TestCase):
         configure: ConfigureProtocol = self._get_configure_simple()
         ports = configure()
 
-        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
-        from taew.adapters.python.inspect.for_browsing_code_tree.root import (
-            Root as InspectRoot,
-        )
-
-        root = InspectRoot(Path("."))
-        bind = Bind(root)
+        from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 
         from_marshallable = bind(FromMarshallableProtocol, ports)
 
@@ -171,13 +147,7 @@ class TestNamedTupleConfigureIntegration(unittest.TestCase):
         configure: ConfigureProtocol = self._get_configure_simple()
         ports = configure()
 
-        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
-        from taew.adapters.python.inspect.for_browsing_code_tree.root import (
-            Root as InspectRoot,
-        )
-
-        root = InspectRoot(Path("."))
-        bind = Bind(root)
+        from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 
         from_marshallable = bind(FromMarshallableProtocol, ports)
 
@@ -202,13 +172,7 @@ class TestNamedTupleConfigureIntegration(unittest.TestCase):
         configure: ConfigureProtocol = self._get_configure_simple()
         ports = configure()
 
-        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
-        from taew.adapters.python.inspect.for_browsing_code_tree.root import (
-            Root as InspectRoot,
-        )
-
-        root = InspectRoot(Path("."))
-        bind = Bind(root)
+        from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 
         to_marshallable = bind(ToMarshallableProtocol, ports)
 

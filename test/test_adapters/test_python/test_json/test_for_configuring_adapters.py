@@ -40,13 +40,7 @@ class TestJsonConfigureIntegration(unittest.TestCase):
         )
         ports = configure()
 
-        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
-        from taew.adapters.python.inspect.for_browsing_code_tree.root import (
-            Root as InspectRoot,
-        )
-
-        root = InspectRoot(Path("."))
-        bind = Bind(root)
+        from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 
         dumps = bind(DumpsProtocol, ports)
         loads = bind(LoadsProtocol, ports)
@@ -73,13 +67,7 @@ class TestJsonConfigureIntegration(unittest.TestCase):
         )
         ports = configure()
 
-        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
-        from taew.adapters.python.inspect.for_browsing_code_tree.root import (
-            Root as InspectRoot,
-        )
-
-        root = InspectRoot(Path("."))
-        bind = Bind(root)
+        from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 
         dumps = bind(DumpsProtocol, ports)
 

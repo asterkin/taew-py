@@ -18,14 +18,6 @@ class TestLoggingConfigureIntegration(unittest.TestCase):
         return Configure(_name=name, _level=level)
 
     def _bind(self, cfg: ConfigureProtocol) -> LoggerProtocol:
-        from taew.adapters.python.inspect.for_browsing_code_tree.root import (
-            Root as InspectRoot,
-        )
-        from taew.adapters.launch_time.for_binding_interfaces.bind import Bind
-
-        ports = cfg()
-        root = InspectRoot(Path("."))
-        bind = Bind(root)
         return bind(LoggerProtocol, ports)
 
     def test_configure_with_default_level(self) -> None:
