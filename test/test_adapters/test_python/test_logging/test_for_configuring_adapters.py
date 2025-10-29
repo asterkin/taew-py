@@ -6,7 +6,6 @@ from taew.domain.logging import INFO, DEBUG, WARNING, LogLevel
 from taew.ports.for_configuring_adapters import Configure as ConfigureProtocol
 from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 from taew.ports.for_logging import Logger as LoggerProtocol
-from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 
 
 class TestLoggingConfigureIntegration(unittest.TestCase):
@@ -21,8 +20,10 @@ class TestLoggingConfigureIntegration(unittest.TestCase):
 
     def _bind(self, cfg: ConfigureProtocol) -> LoggerProtocol:
         ports = cfg()
-        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import Configure as BrowseCodeTree
-        from pathlib import Path
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import (
+            Configure as BrowseCodeTree,
+        )
+
         browsing_config = BrowseCodeTree(_root_path=Path("./"))()
         ports.update(browsing_config)
         return bind(LoggerProtocol, ports)
@@ -60,9 +61,9 @@ class TestLoggingConfigureIntegration(unittest.TestCase):
         cfg = self._get_configure("config_test")
         ports = cfg()
 
-        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import Configure as BrowseCodeTree
-
-        from pathlib import Path
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import (
+            Configure as BrowseCodeTree,
+        )
 
         browsing_config = BrowseCodeTree(_root_path=Path("./"))()
 

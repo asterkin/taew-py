@@ -40,9 +40,11 @@ class TestBytesIOSerialization(unittest.TestCase):
         configurator = self._get_configurator(named_tuple_type)
         ports = configurator()
 
-
         # Configure for_browsing_code_tree
-        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import Configure as BrowseCodeTree
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import (
+            Configure as BrowseCodeTree,
+        )
+
         browsing_config = BrowseCodeTree(_root_path=Path("./"))()
         ports.update(browsing_config)
 

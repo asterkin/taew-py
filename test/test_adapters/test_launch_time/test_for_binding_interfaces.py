@@ -34,7 +34,9 @@ class TestBind(TestLunchTimeAdapterBase):
         a callable wrapper that mimics the old Bind protocol interface.
         """
         from taew.adapters.launch_time.for_binding_interfaces.bind import bind
-        from taew.adapters.launch_time.for_binding_interfaces._imp import clear_root_cache
+        from taew.adapters.launch_time.for_binding_interfaces._imp import (
+            clear_root_cache,
+        )
         from taew.domain.configuration import PortConfigurationDict
         import sys
 
@@ -44,7 +46,9 @@ class TestBind(TestLunchTimeAdapterBase):
         # Find the for_browsing_code_tree port module
         browsing_port = None
         for port_module in sys.modules.values():
-            if hasattr(port_module, '__name__') and port_module.__name__.endswith('for_browsing_code_tree'):
+            if hasattr(port_module, "__name__") and port_module.__name__.endswith(
+                "for_browsing_code_tree"
+            ):
                 browsing_port = port_module
                 break
 
@@ -55,9 +59,7 @@ class TestBind(TestLunchTimeAdapterBase):
                 ports_with_root = ports.copy()
                 if browsing_port:
                     ports_with_root[browsing_port] = PortConfigurationDict(
-                        adapter="adapters.python.ram",
-                        kwargs={"_root": root},
-                        ports={}
+                        adapter="adapters.python.ram", kwargs={"_root": root}, ports={}
                     )
                 return cast(object, bind(interface, ports_with_root))
 

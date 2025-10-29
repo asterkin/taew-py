@@ -48,6 +48,7 @@ def bind(interface: Type[T], adapters: PortsMapping) -> T:
             # Create a wrapper function with proper types
             def bind_wrapper(iface: Type[Any]) -> Any:
                 return bind(iface, adapters)
+
             return cast(T, bind_wrapper)
 
         # Otherwise, port is required but missing

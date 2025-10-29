@@ -90,9 +90,13 @@ class TestMain(unittest.TestCase):
     def _get_main(self, root: Optional[PackageProtocol] = None) -> MainProtocol:
         from taew.adapters.cli.for_starting_programs.main import Main
         from taew.adapters.python.ram.for_browsing_code_tree.root import Root
+        from taew.adapters.python.ram.for_browsing_code_tree.package import Package
 
         cli_package = self._get_package() if root is None else root
-        mock_root = Root(items={"adapters": Root(items={"cli": cli_package})})
+        adapters_package = Package(
+            "adapters", items={"cli": cli_package}, version="1.0.0"
+        )
+        mock_root = Root(items={"adapters": adapters_package})
 
         return Main(
             _root=mock_root,
@@ -171,9 +175,13 @@ class TestMain(unittest.TestCase):
         # Create main with real dumps adapter
         from taew.adapters.cli.for_starting_programs.main import Main
         from taew.adapters.python.ram.for_browsing_code_tree.root import Root
+        from taew.adapters.python.ram.for_browsing_code_tree.package import Package
 
         cli_package = self._get_package()
-        mock_root = Root(items={"adapters": Root(items={"cli": cli_package})})
+        adapters_package = Package(
+            "adapters", items={"cli": cli_package}, version="1.0.0"
+        )
+        mock_root = Root(items={"adapters": adapters_package})
 
         main = Main(
             _root=mock_root,
@@ -198,9 +206,13 @@ class TestMain(unittest.TestCase):
 
     def test_unknown_command_adds_usage(self) -> None:
         from taew.adapters.python.ram.for_browsing_code_tree.root import Root
+        from taew.adapters.python.ram.for_browsing_code_tree.package import Package
 
         cli_package = self._get_package()
-        mock_root = Root(items={"adapters": Root(items={"cli": cli_package})})
+        adapters_package = Package(
+            "adapters", items={"cli": cli_package}, version="1.0.0"
+        )
+        mock_root = Root(items={"adapters": adapters_package})
 
         # Create a new mock builder with unknown command
         unknown_cmd_args = ["myapp", "unknown", "123"]

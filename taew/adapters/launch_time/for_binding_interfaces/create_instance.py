@@ -35,7 +35,9 @@ def create_instance(adapter: Class, adapters: PortsMapping) -> object:
         else:
             # For concrete classes, get root and instantiate directly
             root = get_root(adapters)
-            port_configuration = adapters.get(adapter.py_module, PortConfigurationDict())
+            port_configuration = adapters.get(
+                adapter.py_module, PortConfigurationDict()
+            )
             return create_class_instance(adapter, port_configuration, adapters, root)
 
     except Exception as e:

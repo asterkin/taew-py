@@ -22,26 +22,15 @@ class TestOptionalUnionStreaming(unittest.TestCase):
         configure = self._get_configure()
         ports = configure()
 
-
         # Configure for_browsing_code_tree
 
-
-
-        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import Configure as BrowseCodeTree
-
-
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import (
+            Configure as BrowseCodeTree,
+        )
 
         browsing_config = BrowseCodeTree(_root_path=Path("./"))()
 
-
-
         ports.update(browsing_config)
-
-
-
-        
-
-
 
         write = bind(WriteProtocol, ports)
         read = bind(ReadProtocol, ports)

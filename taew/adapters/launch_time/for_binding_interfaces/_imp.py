@@ -65,7 +65,9 @@ def get_root(adapters: PortsMapping) -> Root:
     # Find the for_browsing_code_tree port
     browsing_port = None
     for port_module in sys.modules.values():
-        if hasattr(port_module, '__name__') and port_module.__name__.endswith('for_browsing_code_tree'):
+        if hasattr(port_module, "__name__") and port_module.__name__.endswith(
+            "for_browsing_code_tree"
+        ):
             browsing_port = port_module
             break
 
@@ -87,29 +89,34 @@ def get_root(adapters: PortsMapping) -> Root:
             )
         elif isinstance(config, PortConfigurationDict):
             # Check if Root is pre-instantiated in kwargs
-            if '_root' in config.kwargs:
-                _root_cache[cache_key] = config.kwargs['_root']
+            if "_root" in config.kwargs:
+                _root_cache[cache_key] = config.kwargs["_root"]
             else:
                 # Instantiate Root from the adapter configuration
                 # The adapter path already includes "taew." prefix
                 adapter_path = config.adapter
-                port_name = browsing_port.__name__.split(".")[-1]  # Extract "for_browsing_code_tree"
+                port_name = browsing_port.__name__.split(".")[
+                    -1
+                ]  # Extract "for_browsing_code_tree"
                 root_module_name = f"{adapter_path}.{port_name}.root"
 
                 root_module = sys.modules.get(root_module_name)
                 if root_module is None:
                     import importlib
+
                     root_module = importlib.import_module(root_module_name)
 
                 Root = getattr(root_module, "Root")
                 # Instantiate with kwargs from configuration
                 # Map _root_path to root_path for inspect adapter compatibility
                 kwargs = dict(config.kwargs)
-                if '_root_path' in kwargs:
-                    kwargs['root_path'] = kwargs.pop('_root_path')
+                if "_root_path" in kwargs:
+                    kwargs["root_path"] = kwargs.pop("_root_path")
                 _root_cache[cache_key] = Root(**kwargs)
         else:
-            raise ValueError(f"Invalid for_browsing_code_tree configuration type: {type(config)}")
+            raise ValueError(
+                f"Invalid for_browsing_code_tree configuration type: {type(config)}"
+            )
 
     return _root_cache[cache_key]
 
@@ -179,9 +186,7 @@ def find_adapter_instance(
         try:
             next_item = current[part]
         except KeyError:
-            raise ValueError(
-                f"Invalid adapter path {adapter_path}, {part} not found"
-            )
+            raise ValueError(f"Invalid adapter path {adapter_path}, {part} not found")
         if not (is_module(next_item) or is_package(next_item)):
             raise ValueError(
                 f"Invalid adapter path: '{part}' is not a module or package"
@@ -239,9 +244,7 @@ def _parse_port_configuration_for_adapter_resolution(
             if (new_root := port_configuration.root) is not None:
                 current = root.change_root(new_root)
         case _:
-            raise ValueError(
-                f"Invalid port configuration: {port_configuration}"
-            )
+            raise ValueError(f"Invalid port configuration: {port_configuration}")
 
     return adapter_path, current
 
@@ -398,7 +401,9 @@ def _add_argument(
         _add_config_value(arg_name, arg, config_kwargs[arg_name], args, kwargs)
     # If no configured value, check if it's an interface mapping
     elif interface_type := is_interface_mapping(arg):
-        _add_interface_mapping(arg_name, arg, interface_type, args, kwargs, adapters, root)
+        _add_interface_mapping(
+            arg_name, arg, interface_type, args, kwargs, adapters, root
+        )
     # If union of interfaces, resolve first available
     elif (union_interfaces := _extract_interface_union(arg)) is not None:
         # Check if any interface in the union has a configured port
@@ -550,9 +555,7 @@ def _extract_interface_union(arg: Argument) -> tuple[type, ...] | None:
         return None
     # Validate all are interface types
     if not all(isinstance(t, type) and is_interface_type(t) for t in union_members):
-        raise ValueError(
-            "All union members must be interface types (Protocol or ABC)"
-        )
+        raise ValueError("All union members must be interface types (Protocol or ABC)")
     return cast(tuple[type, ...], union_members)
 
 

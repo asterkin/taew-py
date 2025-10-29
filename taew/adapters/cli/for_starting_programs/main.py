@@ -241,7 +241,9 @@ class Main(MainBase):
             builder.add_item_description(name_kebab, description)
 
     def __call__(self, cmd_args: Sequence[str]) -> None:
-        builder = self._build(self._cli_root.description, self._cli_root.version, cmd_args)
+        builder = self._build(
+            self._cli_root.description, self._cli_root.version, cmd_args
+        )
         command, current = self._find_command(builder)
         if is_package(current) or is_module(current):
             self._add_usage(current, builder)

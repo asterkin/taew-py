@@ -22,31 +22,22 @@ class TestSetStreaming(unittest.TestCase):
     def test_round_trip_int_set(self) -> None:
         configure = self._get_configure()
         ports = configure()
-        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import Configure as BrowseCodeTree
-        from pathlib import Path
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import (
+            Configure as BrowseCodeTree,
+        )
+
         browsing_config = BrowseCodeTree(_root_path=Path("./"))()
         ports.update(browsing_config)
-
 
         # Configure for_browsing_code_tree
 
-
-
-        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import Configure as BrowseCodeTree
-
-
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import (
+            Configure as BrowseCodeTree,
+        )
 
         browsing_config = BrowseCodeTree(_root_path=Path("./"))()
 
-
-
         ports.update(browsing_config)
-
-
-
-        
-
-
 
         write = bind(WriteProtocol, ports)
         read = bind(ReadProtocol, ports)
@@ -69,11 +60,12 @@ class TestSetStreaming(unittest.TestCase):
     def test_duplicate_detection(self) -> None:
         configure = self._get_configure()
         ports = configure()
-        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import Configure as BrowseCodeTree
-        from pathlib import Path
+        from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import (
+            Configure as BrowseCodeTree,
+        )
+
         browsing_config = BrowseCodeTree(_root_path=Path("./"))()
         ports.update(browsing_config)
-
 
         write = bind(WriteProtocol, ports)
         read = bind(ReadProtocol, ports)
