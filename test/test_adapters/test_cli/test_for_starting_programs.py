@@ -197,7 +197,11 @@ class TestMain(unittest.TestCase):
         self.assertIn("42", printed_output)
 
     def test_unknown_command_adds_usage(self) -> None:
-        root = self._get_package()
+        from taew.adapters.python.ram.for_browsing_code_tree.root import Root
+
+        cli_package = self._get_package()
+        mock_root = Root(items={"adapters": Root(items={"cli": cli_package})})
+
         # Create a new mock builder with unknown command
         unknown_cmd_args = ["myapp", "unknown", "123"]
         mock_builder = Mock(spec=BuilderProtocol)
@@ -215,9 +219,9 @@ class TestMain(unittest.TestCase):
         from taew.adapters.cli.for_starting_programs.main import Main
 
         main = Main(
-            _root=root,
+            _root=mock_root,
             _ports_mapping=self._ports,
-            _binder=self._mock_binder,
+            _create_instance=self._mock_binder.create_instance,
             _build=mock_build,
             _dumps=self._mock_dumps,
         )

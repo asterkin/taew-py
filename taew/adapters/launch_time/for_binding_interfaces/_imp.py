@@ -80,23 +80,34 @@ def get_root(adapters: PortsMapping) -> Root:
 
     if cache_key not in _root_cache:
         # Create Root instance from configuration
-        # The configuration should specify the adapter (e.g., "adapters.python.inspect")
-        # and we'll instantiate it
         if isinstance(config, str):
             # Simple string path - need to instantiate the Root adapter
             raise ValueError(
                 "for_browsing_code_tree configuration must include instantiation parameters"
             )
         elif isinstance(config, PortConfigurationDict):
-            # Should have Root class or factory in the configuration
-            # For now, we'll use a simple approach - the Root should be pre-instantiated
-            # and passed in the kwargs
+            # Check if Root is pre-instantiated in kwargs
             if '_root' in config.kwargs:
                 _root_cache[cache_key] = config.kwargs['_root']
             else:
-                raise ValueError(
-                    "for_browsing_code_tree configuration must include '_root' in kwargs"
-                )
+                # Instantiate Root from the adapter configuration
+                # The adapter path already includes "taew." prefix
+                adapter_path = config.adapter
+                port_name = browsing_port.__name__.split(".")[-1]  # Extract "for_browsing_code_tree"
+                root_module_name = f"{adapter_path}.{port_name}.root"
+
+                root_module = sys.modules.get(root_module_name)
+                if root_module is None:
+                    import importlib
+                    root_module = importlib.import_module(root_module_name)
+
+                Root = getattr(root_module, "Root")
+                # Instantiate with kwargs from configuration
+                # Map _root_path to root_path for inspect adapter compatibility
+                kwargs = dict(config.kwargs)
+                if '_root_path' in kwargs:
+                    kwargs['root_path'] = kwargs.pop('_root_path')
+                _root_cache[cache_key] = Root(**kwargs)
         else:
             raise ValueError(f"Invalid for_browsing_code_tree configuration type: {type(config)}")
 
