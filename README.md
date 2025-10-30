@@ -1,5 +1,10 @@
 # taew-py
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.14+-blue.svg)](https://www.python.org/downloads/)
+[![Platform](https://img.shields.io/badge/platform-linux-blue.svg)](https://www.kernel.org/)
+[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+
 **Ports & Adapters foundation library for Python applications**
 
 `taew-py` is a Python foundation library that supports rapid development of evolvable MVPs without premature technology lock-in. By implementing the Ports & Adapters (Hexagonal Architecture) pattern, it enables you to build applications where core business logic remains independent of external technologies and frameworks.
@@ -126,7 +131,8 @@ This design enables:
 - **CLI First MVP** - close to zero code conversion of application workflows to CLI commands
 
 ## Sample Application
-TODO: reference to bluezone sample application
+
+See [bz-taew-py](https://github.com/asterkin/bz-taew-py) - a complete CLI application for parking zone payment validation demonstrating real-world usage of taew-py's ports and adapters architecture.
 
 ### Evolvable Applications
 
@@ -154,13 +160,269 @@ This separation enables:
 
 ## User Guide
 
-**TBD** - Comprehensive user guide will be added covering installation, basic usage, and common patterns.
+### Installation
+
+taew-py requires Python 3.14+ and is currently distributed via GitHub. We recommend using `uv` for dependency management.
+
+#### Install uv (if not already installed)
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+#### Add taew-py to your project
+
+```bash
+# Initialize a new project
+uv init my-app
+cd my-app
+
+# Add taew-py as a dependency
+uv add "taew @ git+https://github.com/asterkin/taew-py.git@main"
+```
+
+#### Configure in pyproject.toml
+
+```toml
+[project]
+name = "my-app"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = [
+    "taew",
+]
+
+[tool.uv.sources]
+taew = { git = "https://github.com/asterkin/taew-py.git", branch = "main" }
+```
+
+### Quick Start
+
+A typical taew-py application follows this structure:
+
+```
+my-app/
+├── domain/              # Pure business data structures
+├── ports/               # Protocol interfaces for your capabilities
+├── workflows/           # Business logic orchestrating ports
+├── adapters/            # Port implementations
+│   ├── cli/             # CLI commands (auto-discovered)
+│   ├── ram/             # In-memory adapters (for prototyping)
+│   └── <technology>/    # Technology-specific adapters
+├── configuration.py     # Dependency injection wiring
+├── bin/
+│   └── my-app           # CLI entry point
+└── pyproject.toml
+```
+
+### Basic Example
+
+**1. Define your domain** (`domain/greeting.py`):
+
+```python
+from dataclasses import dataclass
+
+@dataclass(frozen=True)
+class Greeting:
+    name: str
+    message: str
+```
+
+**2. Define your ports** (`ports/for_storing_greetings.py`):
+
+```python
+from typing import Protocol
+from domain.greeting import Greeting
+
+class Save(Protocol):
+    def __call__(self, greeting: Greeting) -> None: ...
+
+class Load(Protocol):
+    def __call__(self, name: str) -> Greeting | None: ...
+```
+
+**3. Create workflow** (`workflows/greet.py`):
+
+```python
+from dataclasses import dataclass
+from domain.greeting import Greeting
+from ports.for_storing_greetings import Save
+
+@dataclass(frozen=True)
+class Greet:
+    _save: Save
+
+    def __call__(self, name: str) -> str:
+        greeting = Greeting(name=name, message=f"Hello, {name}!")
+        self._save(greeting)
+        return greeting.message
+```
+
+**4. Implement adapter** (`adapters/ram/for_storing_greetings/`):
+
+```python
+# adapters/ram/for_storing_greetings/save.py
+from dataclasses import dataclass
+from domain.greeting import Greeting
+
+@dataclass(frozen=True)
+class Save:
+    _storage: dict[str, Greeting]
+
+    def __call__(self, greeting: Greeting) -> None:
+        self._storage[greeting.name] = greeting
+
+# adapters/ram/for_storing_greetings/for_configuring_adapters.py
+from taew.domain.configuration import PortConfiguration, PortConfigurationDict
+from taew.ports import for_storing_greetings
+
+class Configure:
+    def __init__(self, **kwargs):
+        self._kwargs = kwargs
+
+    def __call__(self) -> PortConfigurationDict:
+        storage: dict = {}
+        return {
+            for_storing_greetings: PortConfiguration(
+                adapter_module="adapters.ram.for_storing_greetings",
+                kwargs={"_storage": storage}
+            )
+        }
+```
+
+**5. Create CLI command** (`adapters/cli/greet.py`):
+
+```python
+# CLI commands are auto-discovered - just create the function/class
+from workflows.greet import Greet
+
+# This becomes: my-app greet <name>
+# taew-py automatically injects Greet's dependencies
+```
+
+**6. Configure and wire** (`configuration.py`):
+
+```python
+from pathlib import Path
+from taew.utils.cli import configure
+from adapters.ram.for_storing_greetings.for_configuring_adapters import (
+    Configure as Greetings,
+)
+from workflows.greet.for_configuring_adapters import Configure as GreetWorkflow
+
+adapters = configure(
+    Greetings(),
+    GreetWorkflow(),
+    root_path=Path("./"),
+    cli_package="adapters.cli",
+)
+```
+
+**7. Create entry point** (`bin/my-app`):
+
+```python
+#!/usr/bin/env python3
+import sys
+from taew.ports.for_starting_programs import Main
+from taew.adapters.launch_time.for_binding_interfaces import bind
+from configuration import adapters
+
+def main() -> None:
+    _main = bind(Main, adapters=adapters)
+    _main(sys.argv)
+
+if __name__ == "__main__":
+    main()
+```
+
+**8. Run your application:**
+
+```bash
+chmod +x bin/my-app
+./bin/my-app greet Alice
+# Output: Hello, Alice!
+```
+
+### Real-World Example
+
+See [bz-taew-py](https://github.com/asterkin/bz-taew-py) for a complete application demonstrating:
+- Complex domain models (parking tickets, payment cards, zones)
+- Multiple workflows (car drivers, parking inspectors)
+- Various adapters (RAM, directory-based storage, CLI)
+- Configuration with variants (date formatting)
+- Full test suite with 100% coverage
+
+### Next Steps
+
+- Study [bz-taew-py](https://github.com/asterkin/bz-taew-py) for real-world patterns
+- Read [CLAUDE.md](CLAUDE.md) for system architecture details
+- Review [CONTRIBUTING.md](CONTRIBUTING.md) for AI-native development workflow
+- Explore adapter implementations in `taew/adapters/python/`
 
 ## Project Structure
 
-**TBD** - Project structure will be formally documented in an Architecture Decision Record (ADR).
+```
+taew-py/
+├── taew/                    # Core library
+│   ├── domain/              # Pure data structures
+│   │   ├── configuration.py # Port and adapter configuration types
+│   │   ├── argument.py      # Function argument metadata
+│   │   └── function.py      # Function metadata structures
+│   ├── ports/               # Protocol-based interfaces
+│   │   ├── for_binding_interfaces.py
+│   │   ├── for_browsing_code_tree.py
+│   │   ├── for_building_command_parsers.py
+│   │   ├── for_stringizing_objects.py
+│   │   ├── for_marshalling_objects.py
+│   │   └── ...              # Additional port definitions
+│   ├── adapters/            # Concrete implementations
+│   │   ├── python/          # Python stdlib adapters
+│   │   │   ├── argparse/    # CLI argument parsing
+│   │   │   ├── dataclass/   # Dataclass support
+│   │   │   ├── json/        # JSON serialization
+│   │   │   ├── pprint/      # Pretty printing
+│   │   │   ├── pickle/      # Binary serialization
+│   │   │   ├── inspect/     # Code introspection
+│   │   │   └── ...          # 30+ stdlib adapters
+│   │   ├── cli/             # CLI command framework
+│   │   │   └── for_starting_programs/
+│   │   └── launch_time/     # Dependency injection
+│   │       └── for_binding_interfaces/
+│   └── utils/               # Minimal utilities
+│       ├── cli.py           # CLI bootstrap helpers
+│       └── configure.py     # Configuration utilities
+├── test/                    # Test suite
+├── bin/                     # Sample CLI applications
+├── CLAUDE.md                # System architecture (AI context)
+├── GEMINI.md                # Quick reference (AI context)
+├── AGENTS.md                # Cross-agent patterns (AI context)
+├── CONTRIBUTING.md          # Contribution guidelines
+└── README.md                # This file
+```
+
+**Key Directories:**
+
+- **domain/** - Pure data classes with no behavior or dependencies
+- **ports/** - Protocol definitions named by capability (e.g., `for_stringizing_objects`)
+- **adapters/python/** - 30+ adapters built on Python standard library (argparse, json, pickle, dataclass, inspect, typing, etc.)
+- **adapters/cli/** - Command-line interface framework with automatic command discovery
+- **adapters/launch_time/** - Stateless dependency injection via `bind()` and `create_instance()`
+- **utils/** - Minimal helper functions for configuration and bootstrapping
+
+See [CLAUDE.md](CLAUDE.md) for detailed system architecture and [CONTRIBUTING.md](CONTRIBUTING.md) for development guidance.
 
 ## Contributing
+
+We welcome contributions! This project is designed as an **AI-Native** codebase, optimized for development with AI assistants like Claude Code CLI.
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on:
+- AI-native development workflow
+- Using Claude Code CLI slash commands (`/issue-new`, `/issue-close`)
+- Code quality standards and testing requirements
+- Architectural patterns and the configurator system
+- Pull request process
+
+### Quick Start for Contributors
 
 This project follows strict type checking and formatting standards:
 
