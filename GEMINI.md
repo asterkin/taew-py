@@ -1,43 +1,103 @@
-# Gemini Development Guidelines for taew-adapters-py
+# Gemini Development Guidelines for taew-py
 
-This document provides guidance for the Gemini AI assistant when working on the `taew-adapters-py` repository. It outlines the project's architecture, development commands, coding conventions, and testing strategies.
+This document provides guidance for the Gemini AI assistant when working on the `taew-py` repository. It outlines the project's architecture, development commands, coding conventions, and testing strategies.
 
 ## 1. Core Architecture: Ports & Adapters
 
 This project implements the **Ports & Adapters (Hexagonal) Architecture**. The primary goal is to isolate the core business logic from external technologies and frameworks.
 
--   **`core/`**: Contains the central business logic.
-    -   **`core/taew/domain/`**: Defines the core data structures and business rules.
-    -   **`core/taew/ports/`**: Defines the interfaces (as Python `Protocol`s) that the core logic uses to communicate with the outside world. These are the "ports".
+-   **`taew/domain/`**: Contains the central business logic and pure, behavior-less data structures (e.g., `Configuration`, `Argument`).
+-   **`taew/ports/`**: Defines the interfaces (as Python `Protocol`s) that the core logic uses to communicate with the outside world. These are the "ports," named by their capability (e.g., `for_serializing_objects`, `for_binding_interfaces`).
+-   **`taew/adapters/`**: Contains concrete implementations of the ports. They "adapt" external technologies to fit the requirements of the ports.
+    -   Adapters are organized by the technology they wrap (e.g., `python/`, `cli/`).
+    -   Key adapters include wrappers for `argparse`, `pprint`, `json`, and `inspect`.
+-   **`taew/adapters/launch_time/`**: A special adapter group that provides a dependency injection (DI) mechanism. It wires the adapters to the ports at runtime based on a configuration mapping.
 
--   **Adapters (`python/`, `cli/`, etc.)**: These are concrete implementations of the ports. They "adapt" external technologies to fit the requirements of the ports.
-    -   Adapters are organized by the technology they wrap (e.g., `python/argparse`, `python/ram`).
-    -   Each adapter lives in its own sub-project with its own dependencies and tests.
+## 2. System Deep Dive: How It Works
 
--   **Configuration & Binding (`launch_time/`)**: A dependency injection system wires the adapters to the ports at runtime based on configuration (`PortsMapping`).
+Understanding the runtime flow is critical for evolving the system. The process typically flows from a CLI entry point, through configuration and dependency binding, to command execution.
 
-## 2. Development Environment & Commands
+### Step 1: Entry Point & Configuration
 
-The project uses `uv` for package management and `make` for task automation within each sub-project.
+An application using this framework starts by building a `PortsMapping`. This is a dictionary that maps port protocols to their concrete adapter implementations.
+
+The `taew.utils.configure.configure` function simplifies this by composing multiple adapter configurations into a single `PortsMapping`.
+
+```python
+# Example Application Entry Point
+from taew.utils.cli import configure
+from taew.adapters.launch_time.for_binding_interfaces.bind import bind as bind_function # Import the actual bind function
+
+# 1. Configure all ports with their adapters
+ports_mapping = configure(
+    MyBusinessAdapter(), # Your application's adapter
+    root_path=Path("./"),
+    cli_package="my_app.cli",
+    variants={date: {"_variant": "isoformat"}} # Disambiguate types with multiple adapters
+)
+
+# 2. Bind the main CLI handler
+main = bind_function(for_starting_programs.Main, ports_mapping)
+
+# 3. Execute
+main(sys.argv[1:])
+```
+
+### Step 2: Dependency Injection (`bind` function)
+
+The `bind` function, implemented in `taew/adapters/launch_time/for_binding_interfaces/bind.py`, is the core of the DI container. It is a stateless function with internal caching for efficiency. When called with an interface (a port `Protocol`) and the `PortsMapping`, it:
+
+1.  **Resolves the Adapter**: Looks up the corresponding adapter implementation in the `PortsMapping`.
+2.  **Creates an Instance**: Calls `create_instance` to instantiate the adapter.
+
+### Step 3: Instance Creation (`create_instance`)
+
+The `create_instance` function (`taew/adapters/launch_time/for_binding_interfaces/create_instance.py`) is responsible for instantiating an adapter and injecting its dependencies. It resolves constructor arguments in the following order:
+
+1.  **Explicit `kwargs`**: Uses any values provided directly in the `PortConfiguration`.
+2.  **Protocol-Typed Parameters**: If a constructor argument is typed as a port `Protocol`, it recursively calls `bind` to resolve and inject that dependency.
+3.  **Recursive Resolution**: This process walks the entire dependency graph, creating instances as needed.
+
+### Step 4: CLI Command Execution (`Main`)
+
+The `Main` adapter (`taew/adapters/cli/for_starting_programs/main.py`) orchestrates the entire CLI flow:
+
+1.  **Parse Command**: It interprets the command-line arguments (e.g., `my-app do-something --arg 123`) as a path to navigate.
+2.  **Traverse Code Tree**: Using the `for_browsing_code_tree` port, it navigates the project's modules and classes to find a matching command (e.g., a `do_something` function or a `DoSomething` class).
+3.  **Build Argument Parser**: Once the target command (function or callable class) is found, it uses the `for_building_command_parsers` port (typically the `argparse` adapter) to build a CLI parser from the target's signature.
+4.  **Instantiate & Execute**: It uses `create_instance` to create the command's class (if it is a class) and then executes the command with the parsed arguments.
+5.  **Serialize Output**: The return value of the command is serialized to a string for display using the `for_stringizing_objects` port (e.g., `pprint` adapter).
+
+### Step 5: Type-Driven Adapter Discovery
+
+For complex CLI arguments (e.g., passing a JSON string for a dataclass), the system automatically finds the correct parser:
+
+1.  The `argparse` adapter sees a parameter of type `MyDataClass`.
+2.  It calls a `find` utility which inspects the type (`MyDataClass`).
+3.  The `find` utility locates the appropriate `Configure` class for that type (e.g., a dataclass-to-JSON configurator).
+4.  This configurator provides the `PortsMapping` needed to bind a `Loads` adapter (from the `for_stringizing_objects` port).
+5.  The `argparse` adapter then uses this specific `Loads` adapter as the `type` for the argument, which handles the string-to-object conversion.
+
+## 3. Development Environment & Commands
+
+The project uses `uv` for package management and `make` for task automation.
 
 **General Workflow:**
 
-1.  Navigate to a sub-project directory (e.g., `cd core`).
+1.  Navigate to the root project directory.
 2.  Activate the virtual environment: `source .venv/bin/activate`. (If it doesn't exist, create it with `uv venv`).
 3.  Install dependencies: `uv sync`.
 4.  Run tasks using `make`.
 
-**Key `make` Targets (run from sub-project directories):**
+**Key `make` Targets:**
 
--   `make all`: Run the full suite of static analysis and tests. This is the primary verification command.
+-   `make all`: Run the full suite of static analysis and tests. **This is the primary verification command.**
 -   `make static`: Run all static analysis tools (`ruff`, `mypy`, `pyright`).
 -   `make coverage`: Run tests with code coverage analysis.
--   `make test-unit`: Run the unit tests.
+-   `make test-unit`: Run only the unit tests.
 -   `make ruff-format`: Format the code using `ruff`.
 
-To build all sub-projects at once, use the root script: `bash scripts/build-all.sh`.
-
-## 3. Coding Style & Conventions
+## 4. Coding Style & Conventions
 
 -   **Python Version**: Python 3.13+ with strict type annotations.
 -   **Formatting/Linting**: `ruff` is used for both. Adhere to its rules (`make ruff-format`).
@@ -50,36 +110,41 @@ To build all sub-projects at once, use the root script: `bash scripts/build-all.
     -   Modules and files use `snake_case`.
     -   Adapter packages follow the pattern `taew.adapters.<tech>.<library>.<capability>`.
 
-## 4. Testing Guidelines
+## 5. Testing Guidelines
 
 -   **Framework**: `unittest` is the standard test framework.
--   **Structure**: Tests mirror the source code structure within the `test/` directory of each sub-project (e.g., `cli/test/test_adapters/...`).
--   **Protocol-Driven Tests**: A key pattern is to test against the port's protocol, not the concrete implementation. Use factory functions that return the protocol type.
+-   **Structure**: Tests mirror the source code structure within the `test/` directory (e.g., `test/test_adapters/test_python/...`).
+-   **Protocol-Driven Tests**: This is a critical pattern. Tests should be written against the port's protocol, not the concrete adapter implementation. This ensures adapters are interchangeable. Use factory functions that return the protocol type.
 
     ```python
-    # Example Factory
+    # Example: Testing a Serializer
     from taew.ports.for_serializing_objects import Serialize as SerializeProtocol
 
     def _get_serializer() -> SerializeProtocol:
+        # This factory can be swapped to test a different adapter
         from taew.adapters.python.pprint.for_serializing_objects import PPrint
         return PPrint()
+
+    class MyTest(unittest.TestCase):
+        def test_serialization(self):
+            serializer = _get_serializer()
+            # ... write test logic using the serializer protocol
     ```
 
 -   **Test Discovery**: Test files must be named `test_*.py` and reside in directories containing an `__init__.py` file.
--   **Dependencies**: Prefer using in-memory (`ram`) adapters for dependencies over mocking where possible.
--   **Data-driven Tests**: Use `with self.subTest(...)` to test multiple scenarios within a single test method.
+-   **Isolation**: For tests involving the `launch_time` binder, import and call `clear_root_cache()` in your `tearDown` method to ensure test isolation.
 
-## 5. Creating a New Adapter
+## 6. Creating a New Adapter
 
-1.  **Location**: Create a new directory under `python/<lib>/<port>/` or a similar top-level technology folder.
-2.  **Bootstrap**: Copy the contents of `project-template` into the new directory: `cp -r project-template/* <location>/`.
+1.  **Location**: Create a new directory under `taew/adapters/python/<library>/<port_capability>/` or a similar top-level technology folder.
+2.  **Bootstrap**: Create the necessary files: `pyproject.toml`, `__init__.py`, the implementation module, and a `for_configuring_adapters.py` module containing a `Configure` class.
 3.  **Configure `pyproject.toml`**:
-    -   Set the `[project].name` (e.g., `taew.adapters.python.logging.for_logging`).
-    -   Update the relative paths in `tool.uv.sources.taew.path`, `tool.mypy.mypy_path`, and `tool.pyright.extraPaths` to point to the `core` directory.
-4.  **Implement**: Create modules that implement the port protocols.
-5.  **Test**: Create a parallel test structure under the adapter's `test/` directory.
+    -   Set the `[project].name` (e.g., `taew.adapters.python.yaml.for_serializing_objects`).
+    -   Update relative paths for `tool.uv.sources`, `tool.mypy.mypy_path`, and `tool.pyright.extraPaths` to point to the `taew` directory.
+4.  **Implement**: Create a module that implements the desired port protocol.
+5.  **Test**: Create a parallel test structure under the `test/test_adapters/` directory. Write tests against the protocol as described above.
 
-## 6. Git & GitHub Workflow
+## 7. Git & GitHub Workflow
 
 -   **Automation**: The `scripts/` directory contains shell scripts for managing GitHub issues and branches. The `gh` CLI is a prerequisite.
 -   **Branching**: `bash scripts/issue-assign-branch.sh <issue-number>`
@@ -87,7 +152,7 @@ To build all sub-projects at once, use the root script: `bash scripts/build-all.
 -   **Commits**: Follow the convention: `Implement feature X for Y (#123)`. The subject should be imperative.
 -   **Checkpoints**: Use `bash scripts/checkpoint.sh "WIP: message"` for work-in-progress commits.
 
-## 7. Special Conventions
+## 8. Special Conventions
 
 ### Promise-Style Queries (Mandatory)
 
