@@ -1,84 +1,45 @@
-# Repository Guidelines
+# AGENTS.md
 
-## Project Structure & Module Organization
-- Core library: `core/taew/...` (ports, domain, utils).
-- Adapters (by technology/capability): `python/<lib>/<capability>/taew/adapters/python/...`.
-- CLI adapter: `cli/taew/...` with entry-points and tests in `cli/test/...`.
-- Launch-time DI: `launch_time/for_binding_interfaces/...`.
-- Example app and workflows: `bluezone-py/...` with CLI script in `bluezone-py/bin/bz` and tests in `bluezone-py/test/...`.
-- Each subproject keeps its own `pyproject.toml`, `Makefile`, and `test/` folder.
+## Orientation
+- `taew-py` is the shared foundation library that turns annotated Python packages into runnable CLIs using a Ports & Adapters runtime. Everything funnels through three layers: domain types (pure data), protocol ports, and technology-specific adapters.
+- The library follows the same separation it enables: pure domain types (`taew/domain`), abstract operations (`taew/ports`), technology implementations plus their configurators (`taew/adapters`), and shared helpers (`taew/utils`). This project ships adapters built on Python's standard library; third-party technology stacks should provide their own adapter packages.
 
-## Build, Test, and Development Commands
-- Root: `scripts/build-all.sh` builds every subproject with a `Makefile`.
-- Per subproject (e.g., `core`, `cli`, or a `python/...` adapter):
-  - Activate venv first: `source .venv/bin/activate` (required when running `make` directly).
-  - `make all`: run static checks and tests.
-  - `make coverage`: run unit tests with coverage (parallel combine + report).
-  - `make static`: run `ruff` (check+format), `mypy`, and `pyright`.
-  - Example: `cd core && source .venv/bin/activate && make coverage`.
-- Environment: use `uv sync` to create/populate `.venv`; deactivate with `deactivate` when done.
+## Core Systems Snapshot
+- **Domain** – structural primitives such as adapter config (`taew/domain/configuration.py:1`), argument metadata (`taew/domain/argument.py:1`), and error helpers.
+- **Ports** – capability protocols organised by concern (binding, code-tree browsing, CLI parsing, object (de)serialisation) in `taew/ports/`. The introspection API is defined in `taew/ports/for_browsing_code_tree.py:1`.
+- **Adapters** – split by technology under `taew/adapters/`:
+  - `launch_time` provides dependency injection (`taew/adapters/launch_time/for_binding_interfaces/bind.py:1`).
+  - `python/...` wraps stdlib/runtime features (inspect, argparse, dataclasses, typing, pprint, json, etc.).
+  - `cli/...` hosts the runnable command dispatcher (`taew/adapters/cli/for_starting_programs/main.py:26`).
 
-## Coding Style & Naming Conventions
-- Python ≥ 3.13 with strict typing (`mypy`, `pyright`).
-- Imports: order by ascending line length.
-- Typing rules: use `|` for unions; prefer `Optional[T]` over `T | None`; use built-in generics (`list[T]`, `dict[K, V]`, `tuple[T, ...]`, `set[T]`).
-- Formatting/Linting: `ruff` (check + format via `make static`).
-- Packages live under `taew`; files/modules use `snake_case`. Adapters follow `taew.adapters.python.<module>.<capability>`.
+## Configuration Flow
+1. Each adapter exposes an immutable `Configure` dataclass that knows how to emit its `PortsMapping`. They inherit shared behaviour from `taew/adapters/python/dataclass/for_configuring_adapters.py:14`, which auto-detects adapter packages, computes project roots, and recursively short-circuits to other configurators based on type annotations.
+2. Application wiring composes these with `taew/utils/configure.py:10`, which simply unions the dicts returned by each `Configure`.
+3. `taew/utils/cli.py:1` assembles a full CLI stack: inspect-based code browsing, argparse command builder, pprint output formatting, type-aware configuration discovery, and the CLI runtime. It accepts additional configurators for business ports plus optional type-variant overrides.
 
-Example
-```python
-import json
-import unittest
-from pathlib import Path
+## Code Tree Infrastructure
+- The runtime treats the filesystem + import graph as navigable objects. `Root` adapters inherit from `taew/adapters/python/inspect/for_browsing_code_tree/_common.py:18`, which extends the generic folder walker in `taew/adapters/python/path/for_browsing_code_tree/folder.py:9`.
+- Leaf wrappers use runtime inspection enriched with parsed docstrings: modules (`taew/adapters/python/inspect/for_browsing_code_tree/module.py:1`), classes (`taew/adapters/python/inspect/for_browsing_code_tree/class_.py:1`), and callables (`taew/adapters/python/inspect/for_browsing_code_tree/function.py:1`). These provide descriptions, argument metadata, and safe invocation.
+- AST helpers (`taew/adapters/python/ast/...`) backfill docstrings and version fields when imports fail, letting the launcher reason about packages without executing arbitrary code.
 
-from taew.ports.for_storing_data import Store as StoreProtocol
+## Binding & Dependency Injection
+- `bind()` (`taew/adapters/launch_time/for_binding_interfaces/bind.py:1`) resolves any port protocol to an adapter instance using the configured `PortsMapping`. Internals in `_imp.py` cache the code-tree root, map interface types back to port modules, and walk the filesystem to find matching classes or callables (`taew/adapters/launch_time/for_binding_interfaces/_imp.py:40`).
+- Class instantiation is selective: constructor parameters pull explicit kwargs from configuration, otherwise the binder recursively allocates interfaces (including mappings of type -> interface and tuple unions of alternatives).
+- `create_class_instance()` lives in the same module and is also exposed via the port so adapters (notably the CLI) can spin up callable classes on demand.
 
-def process_data(items: list[dict[str, str | int]], config: Optional[dict[str, Any]] = None) -> tuple[str, ...]:
-    ...
-```
+## Type-Driven Adapter Discovery
+- The typing adapter builds on standard annotations to locate the right configurator. `Build` analyses an annotation, chooses an adapter namespace, applies variant rules, and emits the tiny `PortsMapping` required to bind the configurator interface (`taew/adapters/python/typing/for_building_config_ports_mapping/build.py:11`).
+- `Find` (`taew/adapters/python/dataclass/for_finding_configurations/find.py:11`) then binds `Configure` via `Bind`, executes it, and returns the resolved port configuration for the requested capability. This is how higher-level tooling (like the CLI argument builder) avoids hard-coded type maps.
 
-## Testing Guidelines
-- Framework: `unittest`; fully type-annotate test methods/helpers.
-- Structure: mirror adapter paths under `test/test_adapters/...`; keep `__init__.py` in each test folder for discovery.
-- Discovery: files named `test_*.py` under `test/`.
-- Protocol imports: import from ports and alias as `XProtocol` (e.g., `from taew.ports.for_storing_data import Store as StoreProtocol`).
-- Factory pattern: use helpers like `_get_store_adapter() -> StoreProtocol` that build real adapters/workflows to validate protocol conformance.
-- Dependencies: prefer RAM adapters over mocks when available.
-- Data-driven: use `subTest` with table-driven cases for similar scenarios.
-- Coverage: `make coverage` to run, combine, and report.
+## CLI Front Door
+- `MainBase` wires a discovered CLI package to the inspected root (`taew/adapters/cli/for_starting_programs/_common.py:8`), ensuring commands are resolved relative to `adapters/cli`.
+- The main adapter (`taew/adapters/cli/for_starting_programs/main.py:26`) walks CLI arguments, searches for functions or callable classes that match each token (snake-case or PascalCase), and delegates to the argparse builder.
+- `Builder` (`taew/adapters/python/argparse/for_building_command_parsers/build.py:24`) inspects function signatures from the browsing port, generates argparse parsers, and for non-native types asks `Find` + `Bind` to supply a `Loads` adapter. Successful commands print via the configured stringiser.
 
-## New Adapter Sub-Project
-- Location: `python/<lib>/<port>/` (stdlib), `python/ram/<port>/` (RAM/testing), or `<tech>/<port>/` (tech‑neutral).
-- Bootstrap: `cp -r project-template/* <location>/` then customize `pyproject.toml`.
-  - `[project].name`: `taew.adapters.<tech>.<lib?>.<port>` and description.
-  - Point to core: set `tool.uv.sources.taew.path`, `tool.mypy.mypy_path`, `tool.pyright.extraPaths` to the core relative path:
-    - Python adapters/RAM: `../../../core`; tech‑neutral: `../../core`.
-- Namespaces: no `__init__.py` in `taew`, `taew.adapters`, or `taew.adapters.<tech>`; add `__init__.py` only in the final package dir.
-- Implementation: modules per protocol (snake_case), classes match protocol (`Transform`, `Restore`), prefer `@dataclass(frozen=True, eq=False)`, shared bits in `_common.py`.
-- Tests: mirror structure under `test/test_adapters/test_<tech>/test_<lib?>/test_<port>/`, include `__init__.py` in each test folder; use factory helpers returning `XProtocol`.
-- Env & verify: `uv venv && source .venv/bin/activate && uv sync && make`.
+## String & Naming Utilities
+- Helper conversions like `pascal_to_snake` / `snake_to_pascal` live in `taew/utils/strings.py:4` and are reused throughout binding and CLI routing.
 
-## Commit & Pull Request Guidelines
-- Commits: concise, imperative subject; optional scope; reference issues with `(#123)`.
-  - Example: `Implement decimal serialization adapter with tests (#115)`.
-- PRs: include a clear description, linked issues, rationale, and test evidence (coverage output or CLI logs). Keep changes scoped to one concern.
-
-## Security & Configuration Tips
-- Python/toolchain via `uv`: pin with `uv python pin <version>` or run `scripts/upgrade.sh 3.13.x` across subprojects.
-- Subprojects may use `.env` to extend `PATH`/`PYTHONPATH` when running `make`.
-- Avoid cross-project imports outside declared `extraPaths` in `pyproject.toml` to keep adapters modular.
-
-## GitHub Automation (Codex CLI)
-- Prereqs: authenticated `gh` CLI, `origin` remote set.
-- Branch naming: `<issue-number>-<kebab-title>` (lowercase, hyphens).
-- Scripts (in `./scripts`):
-  - Create new issue + branch: `bash scripts/issue-new.sh -t "Feature: add logging" -b "AC..." -l feature`
-  - Assign existing issue + branch: `bash scripts/issue-assign-branch.sh 123`
-- Close issue (build, PR, merge): `bash scripts/issue-close.sh -i 123` (add `--skip-build` to skip checks). This runs `scripts/build-all.sh` by default.
-  - Local checkpoint (no push): `bash scripts/checkpoint.sh "WIP: refactor adapter factory"`
-
-## Dynamic Interface Binding & Adapter Discovery
-- Ports are wired at launch via `taew.adapters.launch_time.for_binding_interfaces.Bind`, which walks the inspected code tree (`Root`, `Package`, `Module`, `Class`, `Function`) and instantiates adapters according to the `PortsMapping` produced by configurators. Constructor arguments are resolved by kind: configured kwargs win, otherwise the binder injects adapters for interface-typed parameters (including `Protocol` unions) by locating their port configuration and recursively creating the required dependencies.
-- Configurators such as `taew.adapters.python.dataclass.for_configuring_adapters.Configure` convert high-level type information into `PortConfigurationDict` items. The shared `_get_configurator`/`_configure_item` path inspects annotations (including generics and named tuples) to discover which adapter package can satisfy the requested protocol, and embeds nested port requirements so the binder can continue resolution down the graph.
-- Example usage in `/home/asher/bluezone-app-py/configuration.py` highlights a current pain point: the CLI port (`for_building_command_parsers`) must include an explicit `for_stringizing_objects` adapter map for every argument type (e.g. `Decimal`, `PaymentCard`). This manual map duplicates knowledge already present in the configurators and forces applications to register conversions even for commands that never consume them.
-- Upcoming work for issue 23 focuses on extracting the configurator-discovery logic so the argparse builder can request `Loads` adapters at runtime based on each command’s signature, eliminating the need for broad upfront mappings while still cooperating with the existing bind/PortsMapping pipeline.
+## Notes For Design Sessions
+- Root caching currently lives in a module-level global (`taew/adapters/launch_time/for_binding_interfaces/_imp.py:40`); revisit if we need multiple isolated adapter graphs.
+- Variants cascade through `_variants` dictionaries in the dataclass configurator (`taew/adapters/python/dataclass/for_configuring_adapters.py:109`) and typing builder (`taew/adapters/python/typing/for_building_config_ports_mapping/build.py:52`). Align future adapter families with this contract.
+- CLI discovery assumes packages expose public functions or callable classes; extending to coroutine commands or more complex argument coercion will likely mean enhancing the code-tree wrappers and the argparse builder in tandem.
