@@ -66,18 +66,19 @@ Generate CLAUDE.md file describing the hello-taew-py application architecture an
 ```
 Reference https://github.com/asterkin/bz-taew-py for adapter patterns.
 
-1. Add GreetingTemplate type alias (str) to domain/greeting.py
-2. Create ports/for_storing_templates.py with GreetingTemplatesRepository protocol implementing __getitem__(name: str) -> GreetingTemplate
-3. Update workflows/for_greetings/hello.py and bye.py to accept self._templates: GreetingTemplatesRepository
-4. Create adapters/ram/for_storing_templates following the pattern from https://github.com/asterkin/bz-taew-py/tree/main/adapters/ram/for_storing_rates
-5. Update configuration.py to populate Templates adapter with Python 3.14 template strings:
-   - "hello": t"Hello {name}!"
-   - "bye": t"Goodbye {name}!"
-   (Note: Use t"..." syntax for template string literals. These are formatted with template.format(name=name))
-6. Update Hello and Bye implementations to retrieve and format templates:
+1. Import Template from string module
+2. Add GreetingTemplate type alias (Template) to domain/greeting.py
+3. Create ports/for_storing_templates.py with GreetingTemplatesRepository protocol implementing __getitem__(name: str) -> GreetingTemplate
+4. Update workflows/for_greetings/hello.py and bye.py to accept self._templates: GreetingTemplatesRepository
+5. Create adapters/ram/for_storing_templates following the pattern from https://github.com/asterkin/bz-taew-py/tree/main/adapters/ram/for_storing_rates
+6. Update configuration.py to populate Templates adapter with Template instances:
+   - "hello": Template("Hello $name!")
+   - "bye": Template("Goodbye $name!")
+   (Note: Template uses $name for substitution, formatted with template.substitute(name=name))
+7. Update Hello and Bye implementations to retrieve and format templates:
    template = self._templates["hello"]
-   return template.format(name=name)
-7. Run say hello taew-py and say bye taew-py to verify template-based output
+   return template.substitute(name=name)
+8. Run say hello taew-py and say bye taew-py to verify template-based output
 ```
 
 ## Prompt 7: Extract Base Class and Add Logging
@@ -91,7 +92,7 @@ Reference https://github.com/asterkin/bz-taew-py/tree/main/workflows for logging
 4. Add _format(self, name: str, greeting: str) -> str method to GreetingBase that:
    - Logs: self._logger.info(f"Processing {greeting} for: {name}")
    - Retrieves template: template = self._templates[greeting.lower()]
-   - Formats and returns: return template.format(name=name)
+   - Substitutes and returns: return template.substitute(name=name)
 5. Update Hello and Bye to inherit from GreetingBase
 6. Simplify Hello.__call__ to: return self._format(name, "hello")
 7. Simplify Bye.__call__ to: return self._format(name, "bye")
@@ -103,12 +104,12 @@ Reference https://github.com/asterkin/bz-taew-py/tree/main/workflows for logging
 
 ```
 Update CLAUDE.md to document the enhanced architecture including:
-- Domain layer: GreetingTemplate type alias and its purpose
+- Domain layer: GreetingTemplate type alias (string.Template) and its purpose
 - Ports: Template repository and logging protocols
-- Workflows: Base class pattern with shared dependencies (_common.py)
+- Workflows: Base class pattern with shared dependencies (_common.py)  and Template Method pattern
 - Adapters: RAM repository pattern and logging adapter configuration
-- Configuration: Template population with t-strings and logging setup
-- Python 3.14 features: Template string usage and benefits
+- Configuration: Template population using string.Template and logging setup
+- Template pattern benefits: Separation of message format from business logic
 ```
 
 ## Expected Project Structure

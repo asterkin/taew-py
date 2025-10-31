@@ -293,7 +293,7 @@ See [HELLO_TAEW_PY.md](HELLO_TAEW_PY.md) for a step-by-step guided tutorial. Sen
 3. **Full architecture** - Implement ports, workflows, and adapters pattern
 4. **Extension practice** - Add new functionality following established patterns
 5. **Initial documentation** - Generate architecture documentation
-6. **Template repository** - Add data abstraction layer with repository pattern and Python 3.14 template strings
+6. **Template repository** - Add data abstraction layer with repository pattern using string.Template
 7. **Base class and logging** - Extract shared dependencies and add cross-cutting concerns
 8. **Final documentation** - Update architecture docs with advanced patterns
 
