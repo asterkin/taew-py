@@ -96,7 +96,10 @@ Reference https://github.com/asterkin/bz-taew-py/tree/main/workflows for logging
 5. Update Hello and Bye to inherit from GreetingBase
 6. Simplify Hello.__call__ to: return self._format(name, "hello")
 7. Simplify Bye.__call__ to: return self._format(name, "bye")
-8. Add logging adapter to configuration.py using taew.adapters.python.logging (see bz-taew-py configuration for pattern)
+8. Add logging adapter to configuration.py:
+   - Import: from taew.adapters.python.logging.for_logging.for_configuring_adapters import Configure as Logging
+   - Import: from taew.domain.logging import INFO
+   - Add to configure(): Logging(_name="hello-taew-py", _level=INFO)
 9. Run say hello taew-py and say bye taew-py and observe logged output
 ```
 
