@@ -196,15 +196,82 @@ dependencies = [
 taew = { git = "https://github.com/asterkin/taew-py.git", branch = "main" }
 ```
 
-### Quick Start
+### Minimal Configuration
 
-A typical taew-py application follows this structure:
+Create `configuration.py` with minimal setup:
+
+```python
+from taew.utils.cli import configure
+
+adapters = configure()
+```
+
+### CLI Entry Point Shim
+
+Create executable `bin/my-app`:
+
+```python
+#!/usr/bin/env python3
+
+import sys
+from pathlib import Path
+
+# Add project root to PYTHONPATH
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from taew.ports.for_starting_programs import Main
+from taew.adapters.launch_time.for_binding_interfaces import bind
+from configuration import adapters
+
+def main() -> None:
+    try:
+        # Dynamically bind the Main interface
+        _main = bind(Main, adapters=adapters)
+
+        # Run with command line arguments
+        _main(sys.argv)
+
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
+```
+
+Make it executable: `chmod +x bin/my-app`
+
+### Workflow Configurator Template
+
+For workflow packages, create `workflows/<package>/for_configuring_adapters.py`:
+
+```python
+from dataclasses import dataclass
+from taew.adapters.python.dataclass.for_configuring_adapters import (
+    Configure as ConfigureBase,
+)
+
+@dataclass(eq=False, frozen=True)
+class Configure(ConfigureBase):
+    _root_marker: str = "workflows"
+    _ports: str = "ports"
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "_package", __package__)
+        object.__setattr__(self, "_file", __file__)
+```
+
+### Application Structure
 
 ```
 my-app/
 ├── domain/              # Pure business data structures
 ├── ports/               # Protocol interfaces for your capabilities
 ├── workflows/           # Business logic orchestrating ports
+│   └── <package>/
+│       ├── __init__.py
+│       ├── for_configuring_adapters.py
+│       └── <workflow>.py
 ├── adapters/            # Port implementations
 │   ├── cli/             # CLI commands (auto-discovered)
 │   ├── ram/             # In-memory adapters (for prototyping)
@@ -215,133 +282,19 @@ my-app/
 └── pyproject.toml
 ```
 
-### Basic Example
+### AI-Native Learning
 
-**1. Define your domain** (`domain/greeting.py`):
+**taew-py is designed for AI-assisted development.** The best way to learn is through hands-on experience with an AI assistant like Claude Code CLI.
 
-```python
-from dataclasses import dataclass
+See [HELLO_TAEW_PY.md](HELLO_TAEW_PY.md) for a step-by-step guided tutorial. Send the proposed prompts one by one to Claude Code CLI and observe the results as you build a complete "Hello World" application through 5 progressive steps:
 
-@dataclass(frozen=True)
-class Greeting:
-    name: str
-    message: str
-```
+1. **Project bootstrapping** - Initialize project, add dependencies, create minimal configuration and CLI shim
+2. **Simple command** - Add a basic CLI command without full architecture
+3. **Full architecture** - Implement ports, workflows, and adapters pattern
+4. **Extension practice** - Add new functionality following established patterns
+5. **Documentation** - Generate architecture documentation for your application
 
-**2. Define your ports** (`ports/for_storing_greetings.py`):
-
-```python
-from typing import Protocol
-from domain.greeting import Greeting
-
-class Save(Protocol):
-    def __call__(self, greeting: Greeting) -> None: ...
-
-class Load(Protocol):
-    def __call__(self, name: str) -> Greeting | None: ...
-```
-
-**3. Create workflow** (`workflows/greet.py`):
-
-```python
-from dataclasses import dataclass
-from domain.greeting import Greeting
-from ports.for_storing_greetings import Save
-
-@dataclass(frozen=True)
-class Greet:
-    _save: Save
-
-    def __call__(self, name: str) -> str:
-        greeting = Greeting(name=name, message=f"Hello, {name}!")
-        self._save(greeting)
-        return greeting.message
-```
-
-**4. Implement adapter** (`adapters/ram/for_storing_greetings/`):
-
-```python
-# adapters/ram/for_storing_greetings/save.py
-from dataclasses import dataclass
-from domain.greeting import Greeting
-
-@dataclass(frozen=True)
-class Save:
-    _storage: dict[str, Greeting]
-
-    def __call__(self, greeting: Greeting) -> None:
-        self._storage[greeting.name] = greeting
-
-# adapters/ram/for_storing_greetings/for_configuring_adapters.py
-from taew.domain.configuration import PortConfiguration, PortConfigurationDict
-from taew.ports import for_storing_greetings
-
-class Configure:
-    def __init__(self, **kwargs):
-        self._kwargs = kwargs
-
-    def __call__(self) -> PortConfigurationDict:
-        storage: dict = {}
-        return {
-            for_storing_greetings: PortConfiguration(
-                adapter_module="adapters.ram.for_storing_greetings",
-                kwargs={"_storage": storage}
-            )
-        }
-```
-
-**5. Create CLI command** (`adapters/cli/greet.py`):
-
-```python
-# CLI commands are auto-discovered - just create the function/class
-from workflows.greet import Greet
-
-# This becomes: my-app greet <name>
-# taew-py automatically injects Greet's dependencies
-```
-
-**6. Configure and wire** (`configuration.py`):
-
-```python
-from pathlib import Path
-from taew.utils.cli import configure
-from adapters.ram.for_storing_greetings.for_configuring_adapters import (
-    Configure as Greetings,
-)
-from workflows.greet.for_configuring_adapters import Configure as GreetWorkflow
-
-adapters = configure(
-    Greetings(),
-    GreetWorkflow(),
-    root_path=Path("./"),
-    cli_package="adapters.cli",
-)
-```
-
-**7. Create entry point** (`bin/my-app`):
-
-```python
-#!/usr/bin/env python3
-import sys
-from taew.ports.for_starting_programs import Main
-from taew.adapters.launch_time.for_binding_interfaces import bind
-from configuration import adapters
-
-def main() -> None:
-    _main = bind(Main, adapters=adapters)
-    _main(sys.argv)
-
-if __name__ == "__main__":
-    main()
-```
-
-**8. Run your application:**
-
-```bash
-chmod +x bin/my-app
-./bin/my-app greet Alice
-# Output: Hello, Alice!
-```
+Each prompt includes verification steps to confirm correct behavior.
 
 ### Real-World Example
 
