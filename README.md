@@ -286,13 +286,16 @@ my-app/
 
 **taew-py is designed for AI-assisted development.** The best way to learn is through hands-on experience with an AI assistant like Claude Code CLI.
 
-See [HELLO_TAEW_PY.md](HELLO_TAEW_PY.md) for a step-by-step guided tutorial. Send the proposed prompts one by one to Claude Code CLI and observe the results as you build a complete "Hello World" application through 5 progressive steps:
+See [HELLO_TAEW_PY.md](HELLO_TAEW_PY.md) for a step-by-step guided tutorial. Send the proposed prompts one by one to Claude Code CLI and observe the results as you build a complete "Hello World" application through 8 progressive steps:
 
 1. **Project bootstrapping** - Initialize project, add dependencies, create minimal configuration and CLI shim
 2. **Simple command** - Add a basic CLI command without full architecture
 3. **Full architecture** - Implement ports, workflows, and adapters pattern
 4. **Extension practice** - Add new functionality following established patterns
-5. **Documentation** - Generate architecture documentation for your application
+5. **Initial documentation** - Generate architecture documentation
+6. **Template repository** - Add data abstraction layer with repository pattern and Python 3.14 template strings
+7. **Base class and logging** - Extract shared dependencies and add cross-cutting concerns
+8. **Final documentation** - Update architecture docs with advanced patterns
 
 Each prompt includes verification steps to confirm correct behavior.
 
