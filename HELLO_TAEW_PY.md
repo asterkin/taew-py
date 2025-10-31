@@ -88,10 +88,15 @@ Reference https://github.com/asterkin/bz-taew-py/tree/main/workflows for logging
 1. Create workflows/for_greetings/_common.py with GreetingBase dataclass
 2. Move self._templates: GreetingTemplatesRepository to GreetingBase
 3. Import Logger from taew.ports.for_logging and add self._logger: Logger to GreetingBase
-4. Update Hello and Bye to inherit from GreetingBase
-5. Add self._logger.info(f"Processing greeting for: {name}") in both workflows before template retrieval
-6. Add logging adapter to configuration.py using taew.adapters.python.logging (see bz-taew-py configuration for pattern)
-7. Run say hello taew-py and say bye taew-py and observe logged output
+4. Add _format(self, name: str, greeting: str) -> str method to GreetingBase that:
+   - Logs: self._logger.info(f"Processing {greeting} for: {name}")
+   - Retrieves template: template = self._templates[greeting.lower()]
+   - Formats and returns: return template.format(name=name)
+5. Update Hello and Bye to inherit from GreetingBase
+6. Simplify Hello.__call__ to: return self._format(name, "hello")
+7. Simplify Bye.__call__ to: return self._format(name, "bye")
+8. Add logging adapter to configuration.py using taew.adapters.python.logging (see bz-taew-py configuration for pattern)
+9. Run say hello taew-py and say bye taew-py and observe logged output
 ```
 
 ## Prompt 8: Update Architecture Documentation
