@@ -2,6 +2,16 @@
 
 This document contains a series of phases to complete with Claude CLI one by one to build a "Hello World" application using the taew-py framework. Each phase is self-contained and can be copy-pasted directly into Claude CLI.
 
+## Prerequisites
+
+Before starting Phase 1, ensure you have `uv` installed. If not, install it using:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+For other installation methods, see: https://docs.astral.sh/uv/getting-started/installation/
+
 ## Phase 1: Initial Project Setup
 
 ```
