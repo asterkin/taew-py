@@ -1,10 +1,12 @@
 # Hello taew-py - Step-by-Step Setup Guide
 
-This document contains a series of prompts to send to Claude CLI one by one to build a "Hello World" application using the taew-py framework.
+This document contains a series of phases to complete with Claude CLI one by one to build a "Hello World" application using the taew-py framework. Each phase is self-contained and can be copy-pasted directly into Claude CLI.
 
-## Prompt 1: Initial Project Setup
+## Phase 1: Initial Project Setup
 
 ```
+Phase 1: Initial Project Setup
+
 Look at https://github.com/asterkin/taew-py/blob/main/README.md User Guide section and perform the following:
 1. Initialize uv project titled "hello-taew-py" "Greeting application built with taew-py foundation library"
 2. Add dependency on taew-py from GitHub as shown in Installation section
@@ -15,21 +17,28 @@ Look at https://github.com/asterkin/taew-py/blob/main/README.md User Guide secti
    and the version from pyproject.toml as __version__
 6. Execute uv ./bin/say --help and observe you get correct help with no commands yet configured
    Execute uv ./bin/say --version and verify it displays the correct version
+7. For each subsequent phase that adds new functionality (not documentation),
+   bump the minor version in both pyproject.toml and adapters/cli/__init__.py
 ```
 
-## Prompt 2: Add Hello CLI Command
+## Phase 2: Add Hello CLI Command
 
 ```
-Add hello.py to adapters/cli with:
-def hello(name: str) -> str: return f'Hello {name}'
-Provide pydoc string to it.
-Run say --help and observe new commands help shows up
-Run say hello taew-py and observe correct output
+Phase 2: Add Hello CLI Command
+
+1. Add hello.py to adapters/cli with:
+   def hello(name: str) -> str: return f'Hello {name}'
+2. Provide pydoc string to it
+3. Run say --help and observe new command help shows up
+4. Run say hello taew-py and observe correct output
+5. Bump minor version in both pyproject.toml and adapters/cli/__init__.py
 ```
 
-## Prompt 3: Implement Full Architecture with Ports and Workflows
+## Phase 3: Implement Full Architecture with Ports and Workflows
 
 ```
+Phase 3: Implement Full Architecture with Ports and Workflows
+
 1. Add ports/for_greetings.py with Hello function protocol accepting name (same signature as for hello cli adapter)
 2. Add workflows/for_greetings package with __init__.py, for_configuring_adapters.py, and hello.py module
 3. In workflows/for_greetings/for_configuring_adapters.py use the Workflow Configurator Template from README.md User Guide section
@@ -44,17 +53,26 @@ Run say hello taew-py and observe correct output
    from ports.for_greetings import Hello
    __all__ = ["Hello"]
 7. Run say hello taew-py and observe correct results
+8. Bump minor version in both pyproject.toml and adapters/cli/__init__.py
 ```
 
-## Prompt 4: Add Bye Functionality
+## Phase 4: Add Bye Functionality
 
 ```
-Add Bye function protocol to ports/for_greetings.py, create workflows/for_greetings/bye.py workflow implementation, and create adapters/cli/bye.py CLI adapter. Run say --help and say bye taew-py to verify.
+Phase 4: Add Bye Functionality
+
+1. Add Bye function protocol to ports/for_greetings.py
+2. Create workflows/for_greetings/bye.py workflow implementation
+3. Create adapters/cli/bye.py CLI adapter
+4. Run say --help and say bye taew-py to verify
+5. Bump minor version in both pyproject.toml and adapters/cli/__init__.py
 ```
 
-## Prompt 5: Generate Initial Architecture Documentation
+## Phase 5: Generate Initial Architecture Documentation
 
 ```
+Phase 5: Generate Initial Architecture Documentation
+
 Generate CLAUDE.md file describing the hello-taew-py application architecture and critical information for further evolution. Include:
 - Application purpose and structure
 - The three-layer architecture (ports/workflows/adapters)
@@ -62,11 +80,15 @@ Generate CLAUDE.md file describing the hello-taew-py application architecture an
 - How CLI commands are auto-discovered
 - Guidelines for adding new functionality
 - Key patterns and conventions to follow
+
+Note: This is a documentation phase - do not bump version.
 ```
 
-## Prompt 6: Add Template Repository Pattern
+## Phase 6: Add Template Repository Pattern
 
 ```
+Phase 6: Add Template Repository Pattern
+
 Reference https://github.com/asterkin/bz-taew-py for adapter patterns.
 
 1. Import Template from string module
@@ -82,11 +104,14 @@ Reference https://github.com/asterkin/bz-taew-py for adapter patterns.
    template = self._templates["hello"]
    return template.substitute(name=name)
 8. Run say hello taew-py and say bye taew-py to verify template-based output
+9. Bump minor version in both pyproject.toml and adapters/cli/__init__.py
 ```
 
-## Prompt 7: Extract Base Class and Add Logging
+## Phase 7: Extract Base Class and Add Logging
 
 ```
+Phase 7: Extract Base Class and Add Logging
+
 Reference https://github.com/asterkin/bz-taew-py/tree/main/workflows for logging patterns.
 
 1. Create workflows/for_greetings/_common.py with GreetingBase dataclass
@@ -104,18 +129,23 @@ Reference https://github.com/asterkin/bz-taew-py/tree/main/workflows for logging
    - Import: from taew.domain.logging import INFO
    - Add to configure(): Logging(_name="hello-taew-py", _level=INFO)
 9. Run say hello taew-py and say bye taew-py and observe logged output
+10. Bump minor version in both pyproject.toml and adapters/cli/__init__.py
 ```
 
-## Prompt 8: Update Architecture Documentation
+## Phase 8: Update Architecture Documentation
 
 ```
+Phase 8: Update Architecture Documentation
+
 Update CLAUDE.md to document the enhanced architecture including:
 - Domain layer: GreetingTemplate type alias (string.Template) and its purpose
 - Ports: Template repository and logging protocols
-- Workflows: Base class pattern with shared dependencies (_common.py)  and Template Method pattern
+- Workflows: Base class pattern with shared dependencies (_common.py) and Template Method pattern
 - Adapters: RAM repository pattern and logging adapter configuration
 - Configuration: Template population using string.Template and logging setup
 - Template pattern benefits: Separation of message format from business logic
+
+Note: This is a documentation phase - do not bump version.
 ```
 
 ## Expected Project Structure
