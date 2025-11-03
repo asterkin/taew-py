@@ -6,12 +6,15 @@ This document contains a series of prompts to send to Claude CLI one by one to b
 
 ```
 Look at https://github.com/asterkin/taew-py/blob/main/README.md User Guide section and perform the following:
-1. Initialize uv project titled "hello-taew-py" "Hello World level application built with taew-py foundation library"
+1. Initialize uv project titled "hello-taew-py" "Greeting application built with taew-py foundation library"
 2. Add dependency on taew-py from GitHub as shown in Installation section
 3. Create configuration.py using the Minimal Configuration example
 4. Create bin/say executable using the CLI Entry Point Shim example
-5. Create empty adapters/cli packages
+5. Create adapters and adapters/cli packages (both with __init__.py files)
+   In adapters/cli/__init__.py replicate the program description from step 1 as a docstring
+   and the version from pyproject.toml as __version__
 6. Execute uv ./bin/say --help and observe you get correct help with no commands yet configured
+   Execute uv ./bin/say --version and verify it displays the correct version
 ```
 
 ## Prompt 2: Add Hello CLI Command
