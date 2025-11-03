@@ -1,7 +1,7 @@
 # taew-py
 
 <p align="center">
-  <img src="docs/images/logo: ChatGPT Image Oct 31, 2025, 03_21_33 PM.png" alt="taew-py logo" width="200"/>
+  <img src="docs/images/logo: ChatGPT Image Nov 2, 2025, 02_16_35 PM.png" alt="taew-py logo" width="200"/>
 </p>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
