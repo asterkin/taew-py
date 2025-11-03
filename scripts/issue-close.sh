@@ -174,7 +174,7 @@ if ! gh pr view >/dev/null 2>&1; then
 fi
 
 # Merge PR and delete branch
-gh pr merge --squash --delete-branch --auto
+gh pr merge --squash --delete-branch --admin
 
 # Sync main and close the issue
 git switch main 2>/dev/null || git checkout main
