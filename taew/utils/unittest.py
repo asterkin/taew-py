@@ -5,116 +5,140 @@ ports & adapters architecture while following the Template Method pattern.
 """
 
 import unittest
-from abc import abstractmethod
 from pathlib import Path
 
-from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 from taew.domain.cli import CommandLine
 from taew.domain.cli_test import Test
-from taew.domain.configuration import PortsMapping
-from taew.ports.for_executing_commands import Execute
 from taew.utils.test import normalize_timing_data
+from taew.utils.configure import configure
+from taew.ports.for_executing_commands import Execute
+from taew.ports.for_configuring_adapters import Configure
+from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 
 
-class TestCLI(unittest.TestCase):
-    """Base class for CLI testing using Template Method pattern.
+class TestConfigure(unittest.TestCase):
+    """Base class for configuration testing.
 
-    Provides a framework for testing CLI applications by defining test
-    specifications using the Test domain type. Subclasses implement
-    _get_test() to define their test scenarios, and can optionally
-    override _configure() to customize execution infrastructure.
+    Provides infrastructure configuration for testing. Subclasses can
+    override _get_configs() to customize adapter configuration.
 
-    The class executes each SubTest using unittest's subTest feature,
-    automatically normalizing timing data in output for deterministic
-    assertions.
-
-    Template Methods:
-        _get_test(): Abstract - returns Test specification (MUST implement)
-        _configure(): Virtual - returns PortsMapping (can override)
-
-    Example:
-        >>> class TestMyApp(TestCLI):
-        ...     def _get_test(self) -> Test:
-        ...         return Test(
-        ...             name="MyApp Tests",
-        ...             command="./bin/myapp",
-        ...             subtests=(
-        ...                 SubTest("version", ("--version",), Result("v1.0\\n", "", 0)),
-        ...             )
-        ...         )
+    Template Method:
+        _get_configs(): Virtual - returns Configure instances (can override)
     """
 
-    execute: Execute
+    def _get_configs(self) -> tuple[Configure, ...]:
+        """Return the Configure instances for infrastructure.
 
-    @abstractmethod
-    def _get_test(self) -> Test:
-        """Return the Test specification to execute.
-
-        Subclasses must implement this method to define their CLI test
-        scenarios using the Test domain type from taew.domain.cli_test.
+        Default implementation provides standard testing infrastructure:
+        FindConfigurations, BuildConfigPortsMapping, and BrowseCodeTree.
+        Subclasses can override to add or replace configurations.
 
         Returns:
-            Test specification with command, subtests, and optional setup
+            Tuple of Configure instances for infrastructure adapters
 
         Example:
-            >>> def _get_test(self) -> Test:
-            ...     return Test(
-            ...         name="Calculator CLI",
-            ...         command="./bin/calc",
-            ...         subtests=(
-            ...             SubTest("add", ("2", "3"), Result("5\\n", "", 0)),
-            ...             SubTest("multiply", ("4", "5"), Result("20\\n", "", 0)),
-            ...         )
-            ...     )
-        """
-        ...
-
-    def _configure(self) -> PortsMapping:
-        """Configure ports for test execution.
-
-        Default implementation uses subprocess execution for running real
-        CLI commands. Subclasses can override this to use RAM adapter for
-        mocked execution or to customize timeout/working directory settings.
-
-        Returns:
-            PortsMapping with Execute and BrowseCodeTree configurations
-
-        Example (override for RAM adapter):
-            >>> def _configure(self) -> PortsMapping:
-            ...     from taew.adapters.python.ram.for_executing_commands.for_configuring_adapters import Configure
-            ...     commands = {
-            ...         CommandLine("./bin/app", ("--version",)): Result("1.0\\n", "", 0)
-            ...     }
-            ...     ports = Configure(_commands=commands)()
-            ...     # Add browsing config...
-            ...     return ports
+            >>> def _get_configs(self) -> tuple[Configure, ...]:
+            ...     return super()._get_configs() + (MyCustomConfig(),)
         """
         from taew.adapters.python.inspect.for_browsing_code_tree.for_configuring_adapters import (
             Configure as BrowseCodeTree,
         )
+        from taew.adapters.python.dataclass.for_finding_configurations.for_configuring_adapters import (
+            Configure as FindConfigurations,
+        )
+        from taew.adapters.python.typing.for_building_config_ports_mapping.for_configuring_adapters import (
+            Configure as BuildConfigPortsMapping,
+        )
+
+        # TODO: overlap with cli.py - refactor to avoid duplication
+        return (
+            FindConfigurations(),
+            BuildConfigPortsMapping(),
+            BrowseCodeTree(_root_path=Path("./")),
+        )
+
+
+class TestCLI(TestConfigure):
+    """Base class for CLI testing using Template Method pattern.
+
+    Provides framework for testing CLI applications using the Test domain type.
+    Subclasses define test methods that call _run(Test(...)) to execute CLI
+    tests. Supports multiple test methods per class for granular test reporting.
+
+    Template Methods:
+        _get_configs(): Virtual - returns infrastructure Configure instances
+        _get_execute(): Virtual - returns Execute Configure instance
+
+    Example:
+        >>> class TestMyApp(TestCLI):
+        ...     def test_version(self) -> None:
+        ...         self._run(Test(
+        ...             name="version",
+        ...             command="./bin/myapp",
+        ...             subtests=(
+        ...                 SubTest("v", ("--version",), Result("v1.0\\n", "", 0)),
+        ...             )
+        ...         ))
+        ...
+        ...     def test_help(self) -> None:
+        ...         self._run(Test(
+        ...             name="help",
+        ...             command="./bin/myapp",
+        ...             subtests=(
+        ...                 SubTest("h", ("--help",), Result("usage\\n", "", 0)),
+        ...             )
+        ...         ))
+    """
+
+    def _get_configs(self) -> tuple[Configure, ...]:
+        """Return Configure instances for test execution.
+
+        Combines infrastructure configs from TestConfigure with Execute
+        configuration from _get_execute(). Override to customize.
+
+        Returns:
+            Tuple of Configure instances including Execute adapter
+        """
+        return super()._get_configs() + (self._get_execute(),)
+
+    def _get_execute(self) -> Configure:
+        """Return Execute configuration for test execution.
+
+        Default uses subprocess for real command execution. Override to use
+        RAM adapter for mocked execution or to customize timeout/cwd.
+
+        Returns:
+            Configure instance for Execute adapter
+
+        Example (RAM adapter override):
+            >>> def _get_execute(self) -> Configure:
+            ...     from taew.adapters.python.ram.for_executing_commands.for_configuring_adapters import (
+            ...         Configure as RAMExecute,
+            ...     )
+            ...     return RAMExecute(_commands={
+            ...         CommandLine("./bin/app", ("--version",)): Result("1.0\\n", "", 0)
+            ...     })
+        """
         from taew.adapters.python.subprocess.for_executing_commands.for_configuring_adapters import (
             Configure as SubprocessExecute,
         )
 
-        # Default: subprocess execution with no timeout
-        ports = SubprocessExecute()()
-        ports.update(BrowseCodeTree(_root_path=Path("./"))())
-        return ports
+        return SubprocessExecute()
 
     def setUp(self) -> None:
         """Setup test execution infrastructure.
 
-        Configures ports and binds the Execute protocol for use in test_cli().
-        Called automatically before each test method.
+        Configures ports and binds Execute protocol. Called automatically
+        before each test method.
         """
-        ports = self._configure()
-        self.execute = bind(Execute, ports)
+        ports = configure(*self._get_configs())
+        self._execute = bind(Execute, ports)
 
     def tearDown(self) -> None:
         """Clean up after test execution.
 
-        Clears the Root cache to ensure test isolation. Called automatically
-        after each test method.
+        Clears Root cache for test isolation. Called automatically after
+        each test method.
         """
         from taew.adapters.launch_time.for_binding_interfaces._imp import (
             clear_root_cache,
@@ -122,20 +146,30 @@ class TestCLI(unittest.TestCase):
 
         clear_root_cache()
 
-    def test_cli(self) -> None:
-        """Execute the CLI test specification.
+    def _run(self, test: Test) -> None:
+        """Execute CLI test specification.
 
-        Runs each SubTest defined in the Test specification returned by
-        _get_test(). For each SubTest:
+        Runs each SubTest in the Test specification:
         1. Builds CommandLine from test.command + subtest.args + test.setup_env
         2. Executes command using bound Execute adapter
-        3. Normalizes stdout using normalize_timing_data()
+        3. Normalizes stdout with normalize_timing_data()
         4. Asserts stdout, stderr, and returncode match expectations
 
-        Uses unittest.subTest() to report results for each SubTest individually.
-        """
-        test = self._get_test()
+        Args:
+            test: Test specification with command, subtests, and optional setup_env
 
+        Uses unittest.subTest() to report each SubTest individually.
+
+        Example:
+            >>> def test_my_command(self) -> None:
+            ...     self._run(Test(
+            ...         name="my test",
+            ...         command="echo",
+            ...         subtests=(
+            ...             SubTest("hello", ("hello",), Result("hello\\n", "", 0)),
+            ...         )
+            ...     ))
+        """
         for subtest in test.subtests:
             with self.subTest(name=subtest.name):
                 # Build environment tuples if setup_env is provided
@@ -149,7 +183,7 @@ class TestCLI(unittest.TestCase):
                 )
 
                 # Execute command
-                result = self.execute(cmd)
+                result = self._execute(cmd)
 
                 # Normalize timing data in both actual and expected output
                 actual_stdout = normalize_timing_data(result.stdout)

@@ -1,7 +1,7 @@
 """Utility functions for configuring ports."""
 
-from functools import reduce
 from operator import or_
+from functools import reduce
 
 from taew.domain.configuration import PortsMapping
 from taew.ports.for_configuring_adapters import Configure
