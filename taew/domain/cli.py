@@ -17,19 +17,19 @@ class CommandLine(NamedTuple):
     Attributes:
         command: Executable path or command name
         args: Command-line arguments (excluding the command itself)
-        env: Optional environment variables for execution context
+        env: Optional environment variables as tuple of (key, value) pairs
 
     Example:
         >>> cmd = CommandLine(
         ...     command="./bin/myapp",
         ...     args=("--version",),
-        ...     env={"DEBUG": "1"}
+        ...     env=(("DEBUG", "1"), ("PATH", "/usr/bin"))
         ... )
     """
 
     command: str
     args: tuple[str, ...] = ()
-    env: dict[str, str] | None = None
+    env: tuple[tuple[str, str], ...] = ()
 
 
 class Result(NamedTuple):

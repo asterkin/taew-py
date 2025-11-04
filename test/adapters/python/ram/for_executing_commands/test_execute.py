@@ -13,7 +13,7 @@ class TestExecute(unittest.TestCase):
         """Execute should return the predefined result for a command."""
         cmd = CommandLine(command="./bin/app", args=("--version",))
         expected = Result(stdout="1.0.0\n", stderr="", returncode=0)
-        execute = Execute(_commands=[(cmd, expected)], _calls=[])
+        execute = Execute(_commands={cmd: expected}, _calls=[])
 
         result = execute(cmd)
 
@@ -25,10 +25,10 @@ class TestExecute(unittest.TestCase):
         cmd2 = CommandLine(command="./bin/app", args=("--help",))
         calls: list[CommandLine] = []
         execute = Execute(
-            _commands=[
-                (cmd1, Result("1.0.0\n", "", 0)),
-                (cmd2, Result("usage\n", "", 0)),
-            ],
+            _commands={
+                cmd1: Result("1.0.0\n", "", 0),
+                cmd2: Result("usage\n", "", 0),
+            },
             _calls=calls,
         )
 
@@ -41,12 +41,12 @@ class TestExecute(unittest.TestCase):
         self.assertEqual(calls[1], cmd2)
         self.assertEqual(calls[2], cmd1)
 
-    def test_execute_raises_lookup_error_for_unknown_command(self):
-        """Execute should raise LookupError for unmapped commands."""
-        execute = Execute(_commands=[], _calls=[])
+    def test_execute_raises_key_error_for_unknown_command(self):
+        """Execute should raise KeyError for unmapped commands."""
+        execute = Execute(_commands={}, _calls=[])
         cmd = CommandLine(command="./bin/unknown", args=())
 
-        with self.assertRaises(LookupError):
+        with self.assertRaises(KeyError):
             execute(cmd)
 
     def test_execute_distinguishes_by_args(self):
@@ -55,10 +55,10 @@ class TestExecute(unittest.TestCase):
         cmd_version = CommandLine(command=base_cmd, args=("--version",))
         cmd_help = CommandLine(command=base_cmd, args=("--help",))
         execute = Execute(
-            _commands=[
-                (cmd_version, Result("1.0.0\n", "", 0)),
-                (cmd_help, Result("usage\n", "", 0)),
-            ],
+            _commands={
+                cmd_version: Result("1.0.0\n", "", 0),
+                cmd_help: Result("usage\n", "", 0),
+            },
             _calls=[],
         )
 
@@ -72,13 +72,13 @@ class TestExecute(unittest.TestCase):
         """Execute should distinguish commands with different environments."""
         cmd_no_env = CommandLine(command="./bin/app", args=("--debug",))
         cmd_with_env = CommandLine(
-            command="./bin/app", args=("--debug",), env={"DEBUG": "1"}
+            command="./bin/app", args=("--debug",), env=(("DEBUG", "1"),)
         )
         execute = Execute(
-            _commands=[
-                (cmd_no_env, Result("debug: off\n", "", 0)),
-                (cmd_with_env, Result("debug: on\n", "", 0)),
-            ],
+            _commands={
+                cmd_no_env: Result("debug: off\n", "", 0),
+                cmd_with_env: Result("debug: on\n", "", 0),
+            },
             _calls=[],
         )
 
