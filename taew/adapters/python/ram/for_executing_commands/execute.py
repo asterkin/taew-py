@@ -5,17 +5,16 @@ to predefined Results. Enables deterministic testing without subprocess
 overhead or external dependencies.
 """
 
-from dataclasses import dataclass, field
-
+from taew.adapters.python.ram.for_executing_commands._common import ExecuteBase
 from taew.domain.cli import CommandLine, Result
 
 
-@dataclass(frozen=True, eq=False)
-class Execute:
+class Execute(ExecuteBase):
     """RAM-based command executor that returns predefined results.
 
-    Stores list of (CommandLine, Result) pairs and returns the first matching
-    result. Records all execution calls for verification.
+    Inherits from ExecuteBase to provide standard command-result mapping
+    and call recording infrastructure. Implements simple lookup-based
+    execution strategy.
 
     The matching is based on the full CommandLine specification (command,
     args, env), enabling precise test scenarios. Uses list lookup instead of
@@ -39,9 +38,6 @@ class Execute:
         >>> assert len(execute._calls) == 1
     """
 
-    _commands: list[tuple[CommandLine, Result]]
-    _calls: list[CommandLine] = field(default_factory=list)
-
     def __call__(self, command_line: CommandLine) -> Result:
         """Execute a command by looking up its predefined result.
 
@@ -55,10 +51,4 @@ class Execute:
             LookupError: If no predefined result exists for this CommandLine
         """
         self._calls.append(command_line)
-        for cmd, result in self._commands:
-            if cmd == command_line:
-                return result
-        raise LookupError(
-            f"No predefined result for command: {command_line.command} "
-            f"with args: {command_line.args}"
-        )
+        return self._lookup(command_line)
