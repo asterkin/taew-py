@@ -5,6 +5,7 @@ from pathlib import Path
 
 from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 from taew.domain.cli import CommandLine, Result
+from taew.domain.configuration import PortsMapping
 from taew.ports.for_configuring_adapters import Configure as ConfigureProtocol
 from taew.ports.for_executing_commands import Execute as ExecuteProtocol
 
@@ -20,16 +21,14 @@ class TestExecute(unittest.TestCase):
 
         clear_root_cache()
 
-    def _get_configure(
-        self, commands: dict[CommandLine, Result]
-    ) -> ConfigureProtocol:
+    def _get_configure(self, commands: dict[CommandLine, Result]) -> ConfigureProtocol:
         from taew.adapters.python.ram.for_executing_commands.for_configuring_adapters import (
             Configure,
         )
 
         return Configure(_commands=commands)
 
-    def _get_ports(self, commands: dict[CommandLine, Result]) -> dict:
+    def _get_ports(self, commands: dict[CommandLine, Result]) -> PortsMapping:
         """Get ports mapping with browsing configuration."""
         configure = self._get_configure(commands)
         ports = configure()
@@ -43,7 +42,7 @@ class TestExecute(unittest.TestCase):
 
         return ports
 
-    def test_execute_returns_predefined_result(self):
+    def test_execute_returns_predefined_result(self) -> None:
         """Execute should return the predefined result for a command."""
         cmd = CommandLine(command="./bin/app", args=("--version",))
         expected = Result(stdout="1.0.0\n", stderr="", returncode=0)
@@ -54,7 +53,7 @@ class TestExecute(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
-    def test_execute_raises_value_error_for_unknown_command(self):
+    def test_execute_raises_value_error_for_unknown_command(self) -> None:
         """Execute should raise ValueError for unexpected commands."""
         ports = self._get_ports({})
         execute = bind(ExecuteProtocol, ports)
@@ -65,7 +64,7 @@ class TestExecute(unittest.TestCase):
 
         self.assertIn("Unexpected CommandLine", str(cm.exception))
 
-    def test_execute_distinguishes_by_args(self):
+    def test_execute_distinguishes_by_args(self) -> None:
         """Execute should distinguish commands with different arguments."""
         base_cmd = "./bin/app"
         cmd_version = CommandLine(command=base_cmd, args=("--version",))
@@ -84,7 +83,7 @@ class TestExecute(unittest.TestCase):
         self.assertEqual(result_version.stdout, "1.0.0\n")
         self.assertEqual(result_help.stdout, "usage\n")
 
-    def test_execute_distinguishes_by_env(self):
+    def test_execute_distinguishes_by_env(self) -> None:
         """Execute should distinguish commands with different environments."""
         cmd_no_env = CommandLine(command="./bin/app", args=("--debug",))
         cmd_with_env = CommandLine(
@@ -104,7 +103,7 @@ class TestExecute(unittest.TestCase):
         self.assertEqual(result_no_env.stdout, "debug: off\n")
         self.assertEqual(result_with_env.stdout, "debug: on\n")
 
-    def test_execute_allows_multiple_calls(self):
+    def test_execute_allows_multiple_calls(self) -> None:
         """Execute should allow calling the same command multiple times."""
         cmd = CommandLine(command="./bin/app", args=("--test",))
         ports = self._get_ports({cmd: Result("ok\n", "", 0)})
@@ -118,7 +117,7 @@ class TestExecute(unittest.TestCase):
         self.assertEqual(result2.stdout, "ok\n")
         self.assertEqual(result3.stdout, "ok\n")
 
-    def test_configure_returns_ports_mapping(self):
+    def test_configure_returns_ports_mapping(self) -> None:
         """Test that Configure returns a valid PortsMapping."""
         cmd = CommandLine(command="./bin/app", args=("--version",))
         ports = self._get_ports({cmd: Result("1.0.0\n", "", 0)})
