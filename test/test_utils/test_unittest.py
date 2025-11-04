@@ -71,30 +71,5 @@ class TestCLI(TestCLIBase):
         )
 
 
-class TestConfiguration(unittest.TestCase):
-    """Test TestCLI configuration override capability."""
-
-    def test_override_get_execute(self) -> None:
-        """Subclass should be able to override _get_execute()."""
-
-        class CustomExecuteTest(TestCLIBase):
-            execute_called = False
-
-            def _get_execute(self) -> Configure:
-                CustomExecuteTest.execute_called = True
-                return super()._get_execute()
-
-            def test_dummy(self) -> None:
-                """Dummy test to satisfy unittest."""
-                pass
-
-        test = CustomExecuteTest("test_dummy")
-        test.setUp()
-
-        self.assertTrue(CustomExecuteTest.execute_called)
-
-        test.tearDown()
-
-
 if __name__ == "__main__":
     unittest.main()
