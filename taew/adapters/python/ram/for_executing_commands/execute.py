@@ -5,10 +5,13 @@ to predefined Results. Enables deterministic testing without subprocess
 overhead or external dependencies.
 """
 
+from dataclasses import dataclass
+
 from taew.adapters.python.ram.for_executing_commands._common import ExecuteBase
 from taew.domain.cli import CommandLine, Result
 
 
+@dataclass(frozen=True, eq=False)
 class Execute(ExecuteBase):
     """RAM-based command executor that returns predefined results.
 
