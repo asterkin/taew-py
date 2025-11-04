@@ -13,37 +13,15 @@ class TestExecute(unittest.TestCase):
         """Execute should return the predefined result for a command."""
         cmd = CommandLine(command="./bin/app", args=("--version",))
         expected = Result(stdout="1.0.0\n", stderr="", returncode=0)
-        execute = Execute(_commands={cmd: expected}, _calls=[])
+        execute = Execute(_commands={cmd: expected})
 
         result = execute(cmd)
 
         self.assertEqual(result, expected)
 
-    def test_execute_records_calls(self):
-        """Execute should record all invocations for verification."""
-        cmd1 = CommandLine(command="./bin/app", args=("--version",))
-        cmd2 = CommandLine(command="./bin/app", args=("--help",))
-        calls: list[CommandLine] = []
-        execute = Execute(
-            _commands={
-                cmd1: Result("1.0.0\n", "", 0),
-                cmd2: Result("usage\n", "", 0),
-            },
-            _calls=calls,
-        )
-
-        execute(cmd1)
-        execute(cmd2)
-        execute(cmd1)
-
-        self.assertEqual(len(calls), 3)
-        self.assertEqual(calls[0], cmd1)
-        self.assertEqual(calls[1], cmd2)
-        self.assertEqual(calls[2], cmd1)
-
     def test_execute_raises_key_error_for_unknown_command(self):
         """Execute should raise KeyError for unmapped commands."""
-        execute = Execute(_commands={}, _calls=[])
+        execute = Execute(_commands={})
         cmd = CommandLine(command="./bin/unknown", args=())
 
         with self.assertRaises(KeyError):
@@ -58,8 +36,7 @@ class TestExecute(unittest.TestCase):
             _commands={
                 cmd_version: Result("1.0.0\n", "", 0),
                 cmd_help: Result("usage\n", "", 0),
-            },
-            _calls=[],
+            }
         )
 
         result_version = execute(cmd_version)
@@ -78,8 +55,7 @@ class TestExecute(unittest.TestCase):
             _commands={
                 cmd_no_env: Result("debug: off\n", "", 0),
                 cmd_with_env: Result("debug: on\n", "", 0),
-            },
-            _calls=[],
+            }
         )
 
         result_no_env = execute(cmd_no_env)
@@ -87,6 +63,19 @@ class TestExecute(unittest.TestCase):
 
         self.assertEqual(result_no_env.stdout, "debug: off\n")
         self.assertEqual(result_with_env.stdout, "debug: on\n")
+
+    def test_execute_allows_multiple_calls(self):
+        """Execute should allow calling the same command multiple times."""
+        cmd = CommandLine(command="./bin/app", args=("--test",))
+        execute = Execute(_commands={cmd: Result("ok\n", "", 0)})
+
+        result1 = execute(cmd)
+        result2 = execute(cmd)
+        result3 = execute(cmd)
+
+        self.assertEqual(result1.stdout, "ok\n")
+        self.assertEqual(result2.stdout, "ok\n")
+        self.assertEqual(result3.stdout, "ok\n")
 
 
 if __name__ == "__main__":
