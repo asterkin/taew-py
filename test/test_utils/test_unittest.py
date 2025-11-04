@@ -2,10 +2,10 @@
 
 import unittest
 
-from taew.domain.cli import CommandLine, Result
 from taew.domain.cli_test import SubTest, Test
-from taew.ports.for_configuring_adapters import Configure
+from taew.domain.cli import CommandLine, Result
 from taew.utils.unittest import TestCLI as TestCLIBase
+from taew.ports.for_configuring_adapters import Configure
 
 
 class TestCLI(TestCLIBase):
