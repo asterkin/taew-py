@@ -7,10 +7,10 @@ ports & adapters architecture while following the Template Method pattern.
 import unittest
 from pathlib import Path
 
-from taew.domain.cli import CommandLine
 from taew.domain.cli_test import Test
-from taew.utils.test import normalize_timing_data
+from taew.domain.cli import CommandLine
 from taew.utils.configure import configure
+from taew.utils.test import normalize_timing_data
 from taew.ports.for_executing_commands import Execute
 from taew.ports.for_configuring_adapters import Configure
 from taew.adapters.launch_time.for_binding_interfaces.bind import bind
