@@ -54,14 +54,16 @@ class TestExecute(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
-    def test_execute_raises_key_error_for_unknown_command(self):
-        """Execute should raise KeyError for unmapped commands."""
+    def test_execute_raises_value_error_for_unknown_command(self):
+        """Execute should raise ValueError for unexpected commands."""
         ports = self._get_ports({})
         execute = bind(ExecuteProtocol, ports)
         cmd = CommandLine(command="./bin/unknown", args=())
 
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ValueError) as cm:
             execute(cmd)
+
+        self.assertIn("Unexpected CommandLine", str(cm.exception))
 
     def test_execute_distinguishes_by_args(self):
         """Execute should distinguish commands with different arguments."""

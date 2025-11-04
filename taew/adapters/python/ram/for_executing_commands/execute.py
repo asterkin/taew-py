@@ -47,6 +47,9 @@ class Execute(ExecuteBase):
             Predefined Result for the given CommandLine
 
         Raises:
-            KeyError: If no predefined result exists for this CommandLine
+            ValueError: If no predefined result exists for this CommandLine
         """
-        return self._commands[command_line]
+        try:
+            return self._commands[command_line]
+        except KeyError:
+            raise ValueError(f"Unexpected CommandLine: {command_line}")

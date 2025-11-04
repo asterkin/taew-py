@@ -48,6 +48,7 @@ class Execute(Protocol):
             Result containing stdout, stderr, and returncode
 
         Raises:
+            ValueError: If command is not supported/configured (e.g., RAM adapter)
             TimeoutError: If command execution exceeds configured timeout
             OSError: If command cannot be executed (not found, permission denied, etc.)
         """
