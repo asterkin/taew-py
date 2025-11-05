@@ -14,7 +14,7 @@ coverage: erase-coverage test-unit combine-coverage report-coverage
 
 test-unit:
 	@echo "Running all tests in $(UNIT_TEST_DIR)..."
-	@coverage run --source=$(SRC_DIR) --parallel-mode -m unittest discover -s $(UNIT_TEST_DIR) -t $(UNIT_TEST_DIR) -p "test_*.py"
+	@coverage run -m unittest discover -s $(UNIT_TEST_DIR) -t $(UNIT_TEST_DIR) -p "test_*.py"
 
 erase-coverage:
 	@rm -f .coverage*
