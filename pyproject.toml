@@ -1,6 +1,6 @@
 [project]
 name = "taew"
-version = "2.15.0"
+version = "2.15.1"
 description = "Python foundation library that supports rapid development of evolvable MVPs without premature technology lock-in."
 authors = [{ name = "Asher Sterkin", email = "asher.sterkin@gmail.com" }]
 readme = "README.md"

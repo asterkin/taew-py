@@ -16,13 +16,8 @@ from taew.ports.for_executing_commands import Execute
 from taew.ports.for_configuring_adapters import Configure
 from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 
-__all__ = [
-    "TestConfigure",
-    "TestCLI",
-    "Test",
-    "SubTest", 
-    "Result"
-]
+__all__ = ["TestConfigure", "TestCLI", "Test", "SubTest", "Result"]
+
 
 class TestConfigure(unittest.TestCase):
     """Base class for configuration testing.
