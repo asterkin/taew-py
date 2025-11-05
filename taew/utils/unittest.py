@@ -8,14 +8,21 @@ import textwrap
 import unittest
 from pathlib import Path
 
-from taew.domain.cli_test import Test
-from taew.domain.cli import CommandLine
 from taew.utils.configure import configure
+from taew.domain.cli_test import SubTest, Test
+from taew.domain.cli import CommandLine, Result
 from taew.utils.test import normalize_timing_data
 from taew.ports.for_executing_commands import Execute
 from taew.ports.for_configuring_adapters import Configure
 from taew.adapters.launch_time.for_binding_interfaces.bind import bind
 
+__all__ = [
+    "TestConfigure",
+    "TestCLI",
+    "Test",
+    "SubTest", 
+    "Result"
+]
 
 class TestConfigure(unittest.TestCase):
     """Base class for configuration testing.
@@ -105,11 +112,19 @@ class TestCLI(TestConfigure):
     def _get_execute(self) -> Configure:
         """Return Execute configuration for test execution.
 
-        Default uses subprocess for real command execution. Override to use
-        RAM adapter for mocked execution or to customize timeout/cwd.
+        Default uses multiprocessing for in-process command execution with full
+        coverage measurement. Override to use subprocess for true process isolation
+        or RAM adapter for mocked execution.
 
         Returns:
             Configure instance for Execute adapter
+
+        Example (subprocess adapter override):
+            >>> def _get_execute(self) -> Configure:
+            ...     from taew.adapters.python.subprocess.for_executing_commands.for_configuring_adapters import (
+            ...         Configure as SubprocessExecute,
+            ...     )
+            ...     return SubprocessExecute()
 
         Example (RAM adapter override):
             >>> def _get_execute(self) -> Configure:
@@ -120,11 +135,11 @@ class TestCLI(TestConfigure):
             ...         CommandLine("./bin/app", ("--version",)): Result("1.0\\n", "", 0)
             ...     })
         """
-        from taew.adapters.python.subprocess.for_executing_commands.for_configuring_adapters import (
-            Configure as SubprocessExecute,
+        from taew.adapters.python.multiprocessing.for_executing_commands.for_configuring_adapters import (
+            Configure as MultiprocessingExecute,
         )
 
-        return SubprocessExecute()
+        return MultiprocessingExecute()
 
     def setUp(self) -> None:
         """Setup test execution infrastructure.
@@ -221,3 +236,14 @@ class TestCLI(TestConfigure):
                     subtest.expected.returncode,
                     f"returncode mismatch for subtest '{subtest.name}'",
                 )
+
+
+# Re-export commonly used types for convenience
+__all__ = [
+    "TestConfigure",
+    "TestCLI",
+    "CommandLine",
+    "Result",
+    "SubTest",
+    "Test",
+]

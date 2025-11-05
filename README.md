@@ -218,6 +218,7 @@ Create executable `bin/my-app`:
 #!/usr/bin/env python3
 
 import sys
+from collections.abc import Sequence
 from pathlib import Path
 
 # Add project root to PYTHONPATH
@@ -227,20 +228,25 @@ from taew.ports.for_starting_programs import Main
 from taew.adapters.launch_time.for_binding_interfaces import bind
 from configuration import adapters
 
-def main() -> None:
+def main(cmd_args: Sequence[str]) -> None:
+    """CLI entry point for testing and production use.
+
+    Args:
+        cmd_args: Command line arguments (typically sys.argv)
+    """
     try:
         # Dynamically bind the Main interface
         _main = bind(Main, adapters=adapters)
 
         # Run with command line arguments
-        _main(sys.argv)
+        _main(cmd_args)
 
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv)
 ```
 
 Make it executable: `chmod +x bin/my-app`

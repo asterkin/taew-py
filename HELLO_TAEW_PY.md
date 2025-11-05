@@ -18,26 +18,38 @@ For other installation methods, see: https://docs.astral.sh/uv/getting-started/i
 Phase 1: Initial Project Setup
 
 Look at https://github.com/asterkin/taew-py/blob/main/README.md User Guide section and perform the following:
-1. Initialize uv project titled "hello-taew-py" "Greeting application built with taew-py foundation library"
-2. Add dependency on taew-py from GitHub as shown in Installation section
-3. Create configuration.py using the Minimal Configuration example
-4. Create bin/say executable using the CLI Entry Point Shim example
-5. Create adapters and adapters/cli packages (both with __init__.py files)
+1. Initialize uv project titled "hello-taew-py" "Greeting application built with taew-py foundation library". Do not create git.
+2. Remove the auto-generated main.py file after initialization
+3. Add dependency on taew-py from GitHub as shown in Installation section
+4. Create configuration.py using the Minimal Configuration example
+5. Create bin/say executable using the CLI Entry Point Shim example
+   NOTE: The shim's main() function must accept cmd_args parameter for testability
+6. Create adapters and adapters/cli packages (both with __init__.py files)
    In adapters/cli/__init__.py replicate the program description from step 1 as a docstring
    and the version from pyproject.toml as __version__
-6. Execute uv ./bin/say --help and observe you get correct help with no commands yet configured
-   Execute uv ./bin/say --version and verify it displays the correct version
-7. For each subsequent phase that adds new functionality (not documentation),
+7. Execute uv ./bin/say --help and observe you get correct help with no commands yet configured
+8. Execute uv ./bin/say --version and verify it displays the correct version
+9. For each subsequent phase that adds new functionality (not documentation),
    bump the minor version in both pyproject.toml and adapters/cli/__init__.py
-8. Create test/test_cli.py using TestCLI base class from https://github.com/asterkin/taew-py/blob/main/taew/utils/unittest.py
-   Use https://github.com/asterkin/bz-taew-py/blob/main/test/test_cli.py as an example
-   Add test for --help and --version commands
-9. Create Makefile using https://github.com/asterkin/taew-py/blob/main/Makefile as example
-   Add development tools to pyproject.toml [tool.uv.dev-dependencies]:
-   - ruff
-   - mypy
-   - pyright
-   Activate venv and run make to verify setup (will run static checks and tests)
+10. Create test/test_cli.py using TestCLI base class from https://github.com/asterkin/taew-py/blob/main/taew/utils/unittest.py
+    IMPORTANT: Use simplified imports (all types re-exported from taew.utils.unittest):
+    - from taew.utils.unittest import TestCLI as TestCLIBase, Result, SubTest, Test
+    The default TestCLI uses multiprocessing adapter for separate process execution with full coverage.
+    See https://github.com/asterkin/taew-py/blob/main/test/test_utils/test_unittest.py for RAM adapter example.
+    Add test for --help and --version commands
+11. Create Makefile using https://github.com/asterkin/taew-py/blob/main/Makefile as example
+    IMPORTANT: Set SRC_DIR=./ (not ./adapters) to include all source files in coverage
+    Add development tools to pyproject.toml [tool.uv.dev-dependencies]:
+    - ruff
+    - mypy
+    - pyright
+    Add coverage configuration to pyproject.toml:
+    [tool.coverage.run]
+    source = ["."]
+    parallel = true
+    concurrency = ["multiprocessing"]
+    Run: source .venv/bin/activate (or equivalent for your shell)
+    Run: make to verify setup (runs static checks and tests with coverage)
 ```
 
 ## Phase 2: Add Hello CLI Command
