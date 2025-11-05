@@ -37,7 +37,7 @@ Look at https://github.com/asterkin/taew-py/blob/main/README.md User Guide secti
    - ruff
    - mypy
    - pyright
-   Run make to verify setup (will run static checks and tests)
+   Activate venv and run make to verify setup (will run static checks and tests)
 ```
 
 ## Phase 2: Add Hello CLI Command
