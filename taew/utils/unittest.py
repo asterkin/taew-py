@@ -4,6 +4,7 @@ Provides base test classes for CLI testing that integrate with taew's
 ports & adapters architecture while following the Template Method pattern.
 """
 
+import textwrap
 import unittest
 from pathlib import Path
 
@@ -152,13 +153,20 @@ class TestCLI(TestConfigure):
         Runs each SubTest in the Test specification:
         1. Builds CommandLine from test.command + subtest.args + test.setup_env
         2. Executes command using bound Execute adapter
-        3. Normalizes stdout with normalize_timing_data()
-        4. Asserts stdout, stderr, and returncode match expectations
+        3. Normalizes timing data in actual stdout/stderr with normalize_timing_data()
+        4. Dedents and strips expected stdout/stderr for readability
+        5. Strips actual stdout/stderr to match
+        6. Asserts stdout, stderr, and returncode match expectations
 
         Args:
             test: Test specification with command, subtests, and optional setup_env
 
         Uses unittest.subTest() to report each SubTest individually.
+
+        Note:
+            Expected output is automatically dedented and stripped, allowing
+            readable multiline strings. Actual output is normalized for timing
+            data and stripped to match.
 
         Example:
             >>> def test_my_command(self) -> None:
@@ -166,7 +174,7 @@ class TestCLI(TestConfigure):
             ...         name="my test",
             ...         command="echo",
             ...         subtests=(
-            ...             SubTest("hello", ("hello",), Result("hello\\n", "", 0)),
+            ...             SubTest("hello", ("hello",), Result("hello", "", 0)),
             ...         )
             ...     ))
         """
@@ -185,9 +193,17 @@ class TestCLI(TestConfigure):
                 # Execute command
                 result = self._execute(cmd)
 
-                # Normalize timing data in both actual and expected output
+                # Normalize timing data in actual output only
                 actual_stdout = normalize_timing_data(result.stdout)
-                expected_stdout = normalize_timing_data(subtest.expected.stdout)
+                actual_stderr = normalize_timing_data(result.stderr)
+
+                # Prepare expected output: dedent and strip for readability
+                expected_stdout = textwrap.dedent(subtest.expected.stdout).strip()
+                expected_stderr = textwrap.dedent(subtest.expected.stderr).strip()
+
+                # Strip actual output to match (since expected is stripped)
+                actual_stdout = actual_stdout.strip()
+                actual_stderr = actual_stderr.strip()
 
                 # Assert results
                 self.assertEqual(
@@ -196,8 +212,8 @@ class TestCLI(TestConfigure):
                     f"stdout mismatch for subtest '{subtest.name}'",
                 )
                 self.assertEqual(
-                    result.stderr,
-                    subtest.expected.stderr,
+                    actual_stderr,
+                    expected_stderr,
                     f"stderr mismatch for subtest '{subtest.name}'",
                 )
                 self.assertEqual(

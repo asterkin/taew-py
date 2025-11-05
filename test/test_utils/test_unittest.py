@@ -19,13 +19,18 @@ class TestCLI(TestCLIBase):
 
         commands = {
             CommandLine(command="./bin/myapp", args=("--version",)): Result(
-                stdout="1.0.0\n", stderr="", returncode=0
+                stdout="1.0.0", stderr="", returncode=0
             ),
             CommandLine(command="./bin/myapp", args=("--help",)): Result(
-                stdout="usage info\n", stderr="", returncode=0
+                stdout="usage info", stderr="", returncode=0
             ),
             CommandLine(command="./bin/myapp", args=("--error",)): Result(
-                stdout="", stderr="error occurred\n", returncode=1
+                stdout="", stderr="error occurred", returncode=1
+            ),
+            CommandLine(command="./bin/myapp", args=("--timing",)): Result(
+                stdout="timestamp=datetime.datetime(2025, 1, 15, 10, 30, 0)",
+                stderr="error at datetime.datetime(2025, 1, 15, 10, 30, 1)",
+                returncode=0,
             ),
         }
 
@@ -41,12 +46,12 @@ class TestCLI(TestCLIBase):
                     SubTest(
                         name="version",
                         args=("--version",),
-                        expected=Result(stdout="1.0.0\n", stderr="", returncode=0),
+                        expected=Result(stdout="1.0.0", stderr="", returncode=0),
                     ),
                     SubTest(
                         name="help",
                         args=("--help",),
-                        expected=Result(stdout="usage info\n", stderr="", returncode=0),
+                        expected=Result(stdout="usage info", stderr="", returncode=0),
                     ),
                 ),
             )
@@ -63,7 +68,27 @@ class TestCLI(TestCLIBase):
                         name="error",
                         args=("--error",),
                         expected=Result(
-                            stdout="", stderr="error occurred\n", returncode=1
+                            stdout="", stderr="error occurred", returncode=1
+                        ),
+                    ),
+                ),
+            )
+        )
+
+    def test_stderr_timing_normalization(self) -> None:
+        """Test that stderr timing data is normalized like stdout."""
+        self._run(
+            Test(
+                name="Timing Normalization Test",
+                command="./bin/myapp",
+                subtests=(
+                    SubTest(
+                        name="timing",
+                        args=("--timing",),
+                        expected=Result(
+                            stdout="timestamp=<TIMESTAMP>",
+                            stderr="error at <DATETIME>",
+                            returncode=0,
                         ),
                     ),
                 ),
