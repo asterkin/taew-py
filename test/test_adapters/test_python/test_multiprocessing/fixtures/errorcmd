@@ -1,0 +1,6 @@
+def main(argv):
+    raise ValueError("Test error")
+
+if __name__ == "__main__":
+    import sys
+    main(sys.argv)

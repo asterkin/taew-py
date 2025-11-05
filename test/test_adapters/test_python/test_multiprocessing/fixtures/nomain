@@ -1,0 +1,2 @@
+def other_function():
+    print("No main here")
