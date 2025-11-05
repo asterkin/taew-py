@@ -29,6 +29,15 @@ Look at https://github.com/asterkin/taew-py/blob/main/README.md User Guide secti
    Execute uv ./bin/say --version and verify it displays the correct version
 7. For each subsequent phase that adds new functionality (not documentation),
    bump the minor version in both pyproject.toml and adapters/cli/__init__.py
+8. Create test/test_cli.py using TestCLI base class from https://github.com/asterkin/taew-py/blob/main/taew/utils/unittest.py
+   Use https://github.com/asterkin/bz-taew-py/blob/main/test/test_cli.py as an example
+   Add test for --help and --version commands
+9. Create Makefile using https://github.com/asterkin/taew-py/blob/main/Makefile as example
+   Add development tools to pyproject.toml [tool.uv.dev-dependencies]:
+   - ruff
+   - mypy
+   - pyright
+   Activate venv and run make to verify setup (will run static checks and tests)
 ```
 
 ## Phase 2: Add Hello CLI Command
@@ -41,7 +50,9 @@ Phase 2: Add Hello CLI Command
 2. Provide pydoc string to it
 3. Run say --help and observe new command help shows up
 4. Run say hello taew-py and observe correct output
-5. Bump minor version in both pyproject.toml and adapters/cli/__init__.py
+5. Update test/test_cli.py to add tests for the hello command
+6. Run make to verify all tests pass
+7. Bump minor version in both pyproject.toml and adapters/cli/__init__.py
 ```
 
 ## Phase 3: Implement Full Architecture with Ports and Workflows
@@ -63,7 +74,9 @@ Phase 3: Implement Full Architecture with Ports and Workflows
    from ports.for_greetings import Hello
    __all__ = ["Hello"]
 7. Run say hello taew-py and observe correct results
-8. Bump minor version in both pyproject.toml and adapters/cli/__init__.py
+8. Update test/test_cli.py to verify the hello command still works with new architecture
+9. Run make to verify all tests pass
+10. Bump minor version in both pyproject.toml and adapters/cli/__init__.py
 ```
 
 ## Phase 4: Add Bye Functionality
@@ -75,7 +88,9 @@ Phase 4: Add Bye Functionality
 2. Create workflows/for_greetings/bye.py workflow implementation
 3. Create adapters/cli/bye.py CLI adapter
 4. Run say --help and say bye taew-py to verify
-5. Bump minor version in both pyproject.toml and adapters/cli/__init__.py
+5. Update test/test_cli.py to add tests for the bye command
+6. Run make to verify all tests pass
+7. Bump minor version in both pyproject.toml and adapters/cli/__init__.py
 ```
 
 ## Phase 5: Generate Initial Architecture Documentation
@@ -114,7 +129,9 @@ Reference https://github.com/asterkin/bz-taew-py for adapter patterns.
    template = self._templates["hello"]
    return template.substitute(name=name)
 8. Run say hello taew-py and say bye taew-py to verify template-based output
-9. Bump minor version in both pyproject.toml and adapters/cli/__init__.py
+9. Update test/test_cli.py to verify template-based output format
+10. Run make to verify all tests pass
+11. Bump minor version in both pyproject.toml and adapters/cli/__init__.py
 ```
 
 ## Phase 7: Extract Base Class and Add Logging
@@ -139,7 +156,9 @@ Reference https://github.com/asterkin/bz-taew-py/tree/main/workflows for logging
    - Import: from taew.domain.logging import INFO
    - Add to configure(): Logging(_name="hello-taew-py", _level=INFO)
 9. Run say hello taew-py and say bye taew-py and observe logged output
-10. Bump minor version in both pyproject.toml and adapters/cli/__init__.py
+10. Update test/test_cli.py to verify commands still work with logging (output unchanged)
+11. Run make to verify all tests pass
+12. Bump minor version in both pyproject.toml and adapters/cli/__init__.py
 ```
 
 ## Phase 8: Update Architecture Documentation
@@ -181,9 +200,12 @@ hello-taew-py/
 │   │   └── bye.py                # Bye CLI adapter
 │   └── ram/
 │       └── for_storing_templates/ # Template repository (auto-generated)
+├── test/
+│   └── test_cli.py               # CLI integration tests
 ├── bin/
 │   └── say                       # Executable shim file
 ├── configuration.py              # Dependency injection wiring
+├── Makefile                      # Build automation (static checks + tests)
 ├── CLAUDE.md                     # Architecture documentation
 └── pyproject.toml
 ```
