@@ -123,7 +123,7 @@ class TestBuilder(unittest.TestCase):
         ):
             builder = self._get_builder("test cli", "0.1.0", args)
             builder.add_command("dummy", "desc", self._get_func())
-            builder.execute(None)
+            builder.execute(None, args)
         output = out_buf.getvalue()
         err = err_buf.getvalue()
         self.assertIn("usage:", output)
@@ -136,7 +136,7 @@ class TestBuilder(unittest.TestCase):
         func = self._get_func()
         builder = self._get_builder("test cli", "0.1.0", args)
         builder.add_command("dummy", "desc", func)
-        result = builder.execute(func)  # function call will check arguments
+        result = builder.execute(func, args)  # function call will check arguments
         # Since execute now returns Any, verify it returns something
         self.assertIsNotNone(result)
 
@@ -154,7 +154,7 @@ class TestBuilder(unittest.TestCase):
 
         builder = self._get_builder("test cli", "0.1.0", args)
         builder.add_command("dummy", "desc", self._get_func())
-        result = builder.execute(mock_func)
+        result = builder.execute(mock_func, args)
 
         self.assertEqual(result, expected_result)
 
@@ -165,7 +165,7 @@ class TestBuilder(unittest.TestCase):
 
         with redirect_stdout(io.StringIO()), self.assertRaises(SystemExit):
             builder = self._get_builder("test cli", "0.1.0", args)
-            _ = builder.execute(None)
+            _ = builder.execute(None, args)
 
     def test_unknown_command_prints_usage(self) -> None:
         args = ["myapp", "unknown"]
@@ -179,7 +179,7 @@ class TestBuilder(unittest.TestCase):
         ):
             builder = self._get_builder("test cli", "0.1.0", args)
             builder.add_item_description("known", "A known command")
-            builder.execute(None)
+            builder.execute(None, args)
         output = out_buf.getvalue()
         err = err_buf.getvalue()
         self.assertIn("usage:", err)
@@ -196,7 +196,7 @@ class TestBuilder(unittest.TestCase):
             self.assertRaises(SystemExit),
         ):
             builder = self._get_builder("test cli", "0.1.0", args)
-            builder.execute(None)
+            builder.execute(None, args)
         output = out_buf.getvalue()
         err = err_buf.getvalue()
         self.assertIn("myapp", output)
@@ -228,7 +228,7 @@ class TestBuilder(unittest.TestCase):
             self.assertEqual(args, (42, "hello"))
             return expected_result
 
-        result = builder.execute(mock_func)
+        result = builder.execute(mock_func, args)
         self.assertEqual(result, expected_result)
 
     def _get_func_with_different_kinds(self) -> FunctionProtocol:
@@ -308,7 +308,7 @@ class TestBuilder(unittest.TestCase):
             self.assertEqual(kwargs["optional_kw"], "default_val")  # Optional kwarg
             return expected_result
 
-        result = builder.execute(mock_func)
+        result = builder.execute(mock_func, args)
         self.assertEqual(result, expected_result)
 
     def _get_func_with_bool(self) -> FunctionProtocol:
@@ -371,7 +371,7 @@ class TestBuilder(unittest.TestCase):
                     self.assertEqual(args[0], expected)
                     return test_result
 
-                result = builder.execute(mock_func)
+                result = builder.execute(mock_func, args)
                 self.assertEqual(result, test_result)
 
     def test_invalid_boolean_positional(self) -> None:
@@ -383,7 +383,7 @@ class TestBuilder(unittest.TestCase):
             func = self._get_func_with_bool()
             builder = self._get_builder("test cli", "0.1.0", args)
             builder.add_command("cmd", "Bool command", func)
-            builder.execute(lambda *a, **k: None)
+            builder.execute(lambda *a, **k: None, args)
 
     def test_unsupported_type_error(self) -> None:
         """Test error for unsupported argument types"""
@@ -499,7 +499,7 @@ class TestBuilder(unittest.TestCase):
             self.assertEqual(value, "parsed:raw")
             return "ok"
 
-        result = builder.execute(run)
+        result = builder.execute(run, args)
         self.assertEqual(result, "ok")
         self.assertEqual(self._find_stub.calls, [(Custom, stringizing_port)])
         self.assertEqual(len(self._bind_stub.calls), 1)
@@ -526,7 +526,7 @@ class TestBuilder(unittest.TestCase):
         out_buf = io.StringIO()
         with redirect_stdout(out_buf), self.assertRaises(SystemExit) as cm:
             builder = self._get_builder("test cli", "0.1.0", args)
-            builder.execute(None)
+            builder.execute(None, args)
 
         self.assertEqual(cm.exception.code, 1)
         self.assertIn("usage:", out_buf.getvalue())
@@ -569,7 +569,7 @@ class TestBuilder(unittest.TestCase):
             self.assertAlmostEqual(args[0], 3.14)
             return expected_result
 
-        result = builder.execute(mock_func)
+        result = builder.execute(mock_func, args)
         self.assertEqual(result, expected_result)
 
     def test_execute_return_value_types(self) -> None:
@@ -597,7 +597,7 @@ class TestBuilder(unittest.TestCase):
                 def mock_func(*args: Any, **kwargs: Any) -> Any:
                     return expected_result
 
-                result = builder.execute(mock_func)
+                result = builder.execute(mock_func, args)
                 self.assertEqual(result, expected_result)
                 self.assertIsInstance(result, expected_type)
 
