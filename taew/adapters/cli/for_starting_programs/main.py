@@ -247,6 +247,6 @@ class Main(MainBase):
         command, current = self._find_command(builder)
         if is_package(current) or is_module(current):
             self._add_usage(current, builder)
-        result = builder.execute(command)
+        result = builder.execute(command, cmd_args)
         if result is not None:
             print(self._dumps(result))

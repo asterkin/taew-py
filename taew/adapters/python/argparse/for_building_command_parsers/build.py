@@ -69,8 +69,9 @@ class Builder:
     def error(self, msg: str) -> None:
         self._parser.error(msg)
 
-    def execute(self, command: Callable[..., Any] | None) -> Any:
-        arg_values = vars(self._root_parser.parse_args())
+    def execute(self, command: Callable[..., Any] | None, args: Sequence[str]) -> Any:
+        # Skip program name (args[0]) when passing to argparse
+        arg_values = vars(self._root_parser.parse_args(args[1:]))
         if "pos_args" in arg_values:
             pos_args = arg_values["pos_args"]
             del arg_values["pos_args"]
