@@ -1,7 +1,7 @@
 
 # Directory Paths
 UNIT_TEST_DIR=./test
-SRC_DIR=./taew
+SRC_DIR=./
 
 # Makefile for Taew Core
 all: sync static coverage

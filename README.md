@@ -178,8 +178,9 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 ```bash
 # Initialize a new project
-uv init my-app
+mkdir my-app
 cd my-app
+uv init my-app
 
 # Add taew-py as a dependency
 uv add "taew @ git+https://github.com/asterkin/taew-py.git@main"
